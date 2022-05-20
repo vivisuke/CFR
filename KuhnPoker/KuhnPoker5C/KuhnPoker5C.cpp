@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <algorithm>
 #include <iostream>
-#include <sstream>
 
 using namespace std;
 
@@ -19,9 +18,11 @@ enum {
 	ACT_CALL,
 	ACT_RAISE,
 	N_ACTIONS,
-	RANK_J = 11,
+	RANK_10 = 10,
+	RANK_J,
 	RANK_Q,
 	RANK_K,
+	RANK_A,
 };
 enum {
 	PLAYER_1 = 0, PLAYER_2,
@@ -88,32 +89,46 @@ class BearishAgent : public Agent {
 // 複合戦略ナッシュ均衡 最適戦略
 const int RAND_RANGE = 10000;
 class OptimalAgent : public Agent {
-	string get_name() const {
-		//sstream ss;
-		return string("OptimalAgent ") + to_string((int)(m_alpha * 100));
-	}
+	string get_name() const { return "OptimalAgent"; }
 	int sel_action(uchar card, int n_actions, bool raised) {
 		int rd = g_mt() % RAND_RANGE;
 		switch( n_actions ) {
 		case 0:		//	初手
 			switch( card ) {
+			case RANK_10:
+				if( rd < m_alpha1 * RAND_RANGE )
+					return ACT_RAISE;
+				return ACT_CHECK;
 			case RANK_J:
-				if( rd < m_alpha * RAND_RANGE )
+				if( rd < m_alpha2 * RAND_RANGE )
 					return ACT_RAISE;
 				return ACT_CHECK;
 			case RANK_Q:
 				return ACT_CHECK;
 			case RANK_K:
-				if( rd < m_alpha * RAND_RANGE * 3 )
+				if( rd < m_alpha1 * RAND_RANGE * 3 )
+					return ACT_RAISE;
+				return ACT_CHECK;
+			case RANK_A:
+				if( rd < m_alpha2 * RAND_RANGE * 3 )
 					return ACT_RAISE;
 				return ACT_CHECK;
 			}
 		case 1:		//	２手目
 			switch( card ) {
-			case RANK_J:
+			case RANK_10:
 				if( raised )			//	レイズされた
 					return ACT_FOLD;
 				if( rd < RAND_RANGE /3 )	//	1/3 の確率でレイズ
+					return ACT_RAISE;
+				return ACT_CHECK;
+			case RANK_J:
+				if( raised ) {
+					if( rd < RAND_RANGE /6 )	//	1/6 の確率でコール
+						return ACT_CALL;
+					return ACT_FOLD;
+				}
+				if( rd < RAND_RANGE /6 )		//	1/6 の確率でレイズ
 					return ACT_RAISE;
 				return ACT_CHECK;
 			case RANK_Q:
@@ -124,35 +139,57 @@ class OptimalAgent : public Agent {
 				}
 				return ACT_CHECK;
 			case RANK_K:
+				if( raised ) {
+					if( rd < RAND_RANGE*2/3 )	//	2/3 の確率でコール
+						return ACT_CALL;
+					return ACT_FOLD;
+				}
+				return ACT_RAISE;
+			case RANK_A:
 				if( raised )
 					return ACT_CALL;
 				return ACT_RAISE;
 			}
 		case 2:		//	３手目（チェック→レイズ の場合に限る）
 			switch( card ) {
-			case RANK_J:
+			case RANK_10:
 				return ACT_FOLD;
+			case RANK_J:
+				if( raised ) {
+					if( rd < RAND_RANGE * (m_alpha1 + 1.0/6) )	//	alpha1 + 1/6 の確率でコール
+						return ACT_CALL;
+					return ACT_FOLD;
+				}
+				return ACT_CHECK;
 			case RANK_Q:
 				if( raised ) {
-					if( rd < RAND_RANGE * (m_alpha + 1.0/3) )	//	alpha + 1/3 の確率でコール
+					if( rd < RAND_RANGE * (m_alpha2 + 1.0/3) )	//	alpha2 + 1/3 の確率でコール
 						return ACT_CALL;
 					return ACT_FOLD;
 				}
 				return ACT_CHECK;
 			case RANK_K:
+				if( raised ) {
+					if( rd < RAND_RANGE * (m_alpha2 + 2.0/3) )	//	alpha2 + 2/3 の確率でコール
+						return ACT_CALL;
+					return ACT_FOLD;
+				}
+				return ACT_CHECK;
+			case RANK_A:
 				return ACT_CALL;
 			}
 		}
 		return ACT_FOLD;
 	}
 public:
-	double	m_alpha = 0.3;
+	double	m_alpha1 = 0.1;
+	double	m_alpha2 = 0.3;
 };
 class CFRAgent : public Agent {
 public:
 	string get_name() const { return "CFRAgent"; }
 	int sel_action(uchar card, int n_actions, bool raised) {
-		g_key[0] = "JQK"[card - RANK_J];
+		g_key[0] = "TJQKA"[card - RANK_10];
 		g_key[1] = '0' + n_actions;
 		g_key[2] = raised ? 'R' : ' ';
 		auto itr = g_map.find(g_key);
@@ -218,14 +255,13 @@ class KuhnPoker {
 public:
 	KuhnPoker() {
 		//cout << "player1: Random, player2: Optimal\n";
-		//m_agents[0] = new CFRAgent();			//	CFRプレイヤー
-		m_agents[0] = new OptimalAgent();		//	最適戦略プレイヤー
+		m_agents[0] = new CFRAgent();			//	CFRプレイヤー
+		//m_agents[0] = new OptimalAgent();		//	最適戦略プレイヤー
 		//m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
 		//m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[0] = new BearishAgent();		//	常に弱気プレイヤー
-		//m_agents[1] = new CFRAgent();			//	CFRプレイヤー
-		m_agents[1] = new OptimalAgent();		//	最適戦略プレイヤー
-		((OptimalAgent*)m_agents[1])->m_alpha = 0.05;
+		m_agents[1] = new CFRAgent();			//	CFRプレイヤー
+		//m_agents[1] = new OptimalAgent();		//	最適戦略プレイヤー
 		//m_agents[1] = new BullishAgent();		//	常に強気プレイヤー
 		//m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[1] = new BearishAgent();		//	常に弱気プレイヤー
@@ -236,14 +272,16 @@ public:
 		cout << "Player1: " << m_agents[0]->get_name() << "\n";
 		cout << "Player2: " << m_agents[1]->get_name() << "\n";
 		//
+		m_deck.push_back(RANK_10);
 		m_deck.push_back(RANK_J);
 		m_deck.push_back(RANK_Q);
 		m_deck.push_back(RANK_K);
+		m_deck.push_back(RANK_A);
 	}
 public:
 	void print_deck() const {
 		for (int i = 0; i != m_deck.size(); ++i) {
-			cout << "JQK"[m_deck[i] - RANK_J] << " ";
+			cout << "TJQKA"[m_deck[i] - RANK_10] << " ";
 		}
 		cout << "\n";
 	}
@@ -292,7 +330,7 @@ public:
 			}
 		}
 		if( bML && m_bML[n_actions % 2] ) {		//	学習ありの場合
-			g_key[0] = "JQK"[card1 - RANK_J];
+			g_key[0] = "TJQKA"[card1 - RANK_10];
 			g_key[1] = '0' + n_actions;
 			g_key[2] = raised ? 'R' : ' ';
 			auto &tbl = g_map[g_key];
@@ -345,6 +383,7 @@ int main()
 	//kp.shuffle_deck();
 	//kp.print_deck();
 	int sum = 0;
+	//const int N_PLAYOUT = 10;
 	const int N_PLAYOUT = 1000*1000;
 	cout << "N_PLAYOUT = " << N_PLAYOUT << "\n\n";
 	for (int i = 0; i < N_PLAYOUT; ++i) {
@@ -353,11 +392,22 @@ int main()
 		#endif
 		sum += kp.playout(/*bML*/true);
 	}
-	cout << "g_map.size() = " << g_map.size() << "\n";
+	cout << "g_map.size() = " << g_map.size() << "\n\n";
+#if	1
+	vector<string> lst;
+	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr)
+		lst.push_back((*itr).first);
+	sort(lst.begin(), lst.end());
+	for (auto itr = lst.begin(); itr != lst.end(); ++itr) {
+		const pair<int, int> &tbl = g_map[*itr];
+		cout << (*itr) << ": " << tbl.first << ", " << tbl.second << "\n";
+	}
+#else
 	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr) {
 		const pair<int, int> &tbl = (*itr).second;
 		cout << (*itr).first << ": " << tbl.first << ", " << tbl.second << "\n";
 	}
+#endif
 #if	0
 	for (int i = 0; i < N_PLAYOUT/2; ++i) {
 		#ifdef DO_PRINT
@@ -373,20 +423,6 @@ int main()
 	}
 #endif
 	cout << "\nave(ut) = " << (double)sum/N_PLAYOUT << "\n";
-#if	0
-	g_deck.push_back(RANK_J);
-	g_deck.push_back(RANK_Q);
-	g_deck.push_back(RANK_K);
-	//
-	for (int k = 0; k < 10; ++k) {
-		shuffle(g_deck.begin(), g_deck.end(), g_mt);
-		//
-		for (int i = 0; i != g_deck.size(); ++i) {
-			cout << "JQK"[g_deck[i]] << " ";
-		}
-		cout << "\n";
-	}
-#endif
 	//
     std::cout << "\nOK!\n";
 }
