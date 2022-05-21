@@ -8,10 +8,10 @@
 
 using namespace std;
 
-#define		DO_PRINT		1
+#define		DO_PRINT		0
 #define		N_PLAYERS		2
-#define		N_PLAYOUT		20
-//#define		N_PLAYOUT		(1000*1000)
+//#define		N_PLAYOUT		20
+#define		N_PLAYOUT		(1000*1000)
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -219,14 +219,14 @@ class KuhnPoker {
 public:
 	KuhnPoker() {
 		//cout << "player1: Random, player2: Optimal\n";
-		//m_agents[0] = new CFRAgent();			//	CFRプレイヤー
-		m_agents[0] = new OptimalAgent();		//	最適戦略プレイヤー
+		m_agents[0] = new CFRAgent();			//	CFRプレイヤー
+		//m_agents[0] = new OptimalAgent();		//	最適戦略プレイヤー
 		//m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
 		//m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[0] = new BearishAgent();		//	常に弱気プレイヤー
-		//m_agents[1] = new CFRAgent();			//	CFRプレイヤー
-		m_agents[1] = new OptimalAgent();		//	最適戦略プレイヤー
-		((OptimalAgent*)m_agents[1])->m_alpha = 0.05;
+		m_agents[1] = new CFRAgent();			//	CFRプレイヤー
+		//m_agents[1] = new OptimalAgent();		//	最適戦略プレイヤー
+		//((OptimalAgent*)m_agents[1])->m_alpha = 0.05;
 		//m_agents[1] = new BullishAgent();		//	常に強気プレイヤー
 		//m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[1] = new BearishAgent();		//	常に弱気プレイヤー
@@ -235,7 +235,7 @@ public:
 		m_bML[1] = m_agents[1]->get_name() == "CFRAgent";
 		//
 		cout << "Player1: " << m_agents[0]->get_name() << "\n";
-		cout << "Player2: " << m_agents[1]->get_name() << "\n";
+		cout << "Player2: " << m_agents[1]->get_name() << "\n\n";
 		//
 		m_deck.push_back(RANK_J);
 		m_deck.push_back(RANK_Q);
@@ -258,12 +258,12 @@ public:
 		m_raised = false;
 		//m_hist_actions.clear();
 		shuffle_deck();
-		#ifdef DO_PRINT
+		#if DO_PRINT
 			print_deck();
 		#endif
 		//act_random(PLAYER_1)
 		auto ut = playout_sub(m_deck[0], m_deck[1], 0, false);
-		#ifdef	DO_PRINT
+		#if	DO_PRINT
 			cout << "utility = " << ut << "\n\n";
 		#endif
 		return ut;
@@ -274,7 +274,7 @@ public:
 		int aix = n_actions % N_PLAYERS;
 		//int aix = m_hist_actions.size() % 2;
 		auto act = m_agents[aix]->sel_action(card1, n_actions, raised);
-		#ifdef DO_PRINT
+		#if DO_PRINT
 			cout << n_actions + 1 << ": " << action_string[act] << "\n";
 		#endif
 		//m_hist_actions.push_back(act);
@@ -299,10 +299,10 @@ public:
 			if( raised ) {
 				//	FOLD, CALL 順
 				if( act == ACT_CALL ) {		//	CALL行動済み → FOLD を試す
-					tbl.first += -1 - ut;
+					tbl.first = max(0, tbl.first -1 - ut);
 				} else {		//	FOLD 行動済み → CALL を試す
 					ut2 = card1 > card2 ? 2 : -2;
-					tbl.second += ut2 - ut;
+					tbl.second = max(0, tbl.second + ut2 - ut);
 				}
 			} else {
 				//	CHECK, RAISE 順
@@ -311,10 +311,10 @@ public:
 						ut2 = card1 > card2 ? 1 : -1;
 					} else
 						ut2 = -playout_sub(card2, card1, n_actions + 1, false);
-					tbl.first += ut2 - ut;
+					tbl.first = max(0, tbl.first + ut2 - ut);
 				} else {		//	CHECK 行動済み → RAISE を試す
 					ut2 = -playout_sub(card2, card1, n_actions + 1, /*raised:*/true);
-					tbl.second += ut2 - ut;
+					tbl.second = max(0, tbl.second + ut2 - ut);
 				}
 			}
 		}
@@ -342,47 +342,39 @@ int main()
 	//kp.print_deck();
 	int sum = 0;
 	//const int N_PLAYOUT = 1000*1000;
-	//cout << "N_PLAYOUT = " << N_PLAYOUT << "\n\n";
-	for (int i = 0; i < N_PLAYOUT; ++i) {
-		#ifdef DO_PRINT
+	cout << "N_PLAYOUT = " << N_PLAYOUT << "\n\n";
+	for (int i = 0; i < N_PLAYOUT; ) {
+		#if DO_PRINT
 			cout << "#" << (i+1) << ": ";
 		#endif
 		sum += kp.playout();
+		if( (++i % (N_PLAYOUT/10)) == 0 ) {
+			//cout << "ave(ut) = " << (double)sum / (N_PLAYOUT/10) << "\n";
+			sum = 0;
+		}
 	}
-	cout << "g_map.size() = " << g_map.size() << "\n";
+	//cout << "\nave(ut) = " << (double)sum / N_PLAYOUT << "\n";
+	//
+	cout << "\ng_map.size() = " << g_map.size() << "\n\n";
+#if	1
+	vector<string> lst;
+	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr)
+		lst.push_back((*itr).first);
+	sort(lst.begin(), lst.end());
+	for (auto itr = lst.begin(); itr != lst.end(); ++itr) {
+		const pair<int, int> &tbl = g_map[*itr];
+		cout << (*itr) << ": " << tbl.first << ", " << tbl.second;
+		if( tbl.first > 0 && tbl.second > 0 ) {
+			auto sum = tbl.first + tbl.second;
+			cout << " (" << tbl.first * 100 / sum << "%, " << tbl.second * 100 / sum << "%)";
+		}
+		cout << "\n";
+	}
+#else
 	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr) {
 		const pair<int, int> &tbl = (*itr).second;
 		cout << (*itr).first << ": " << tbl.first << ", " << tbl.second << "\n";
 	}
-#if	0
-	for (int i = 0; i < N_PLAYOUT/2; ++i) {
-		#ifdef DO_PRINT
-			cout << "#" << (i*2+1) << ": ";
-		#endif
-		sum += kp.playout(false, false);
-		kp.swap_agents();
-		#ifdef DO_PRINT
-			cout << "#" << (i*2+2) << ": ";
-		#endif
-		sum -= kp.playout(false, true);
-		kp.swap_agents();
-	}
 #endif
-	cout << "\nave(ut) = " << (double)sum/N_PLAYOUT << "\n";
-#if	0
-	g_deck.push_back(RANK_J);
-	g_deck.push_back(RANK_Q);
-	g_deck.push_back(RANK_K);
-	//
-	for (int k = 0; k < 10; ++k) {
-		shuffle(g_deck.begin(), g_deck.end(), g_mt);
-		//
-		for (int i = 0; i != g_deck.size(); ++i) {
-			cout << "JQK"[g_deck[i]] << " ";
-		}
-		cout << "\n";
-	}
-#endif
-	//
     std::cout << "\nOK!\n";
 }

@@ -15,7 +15,7 @@
 0013 ◎ C 01/22 05/22 0.001│ToDo│KuhnPoker4C プロジェクト削除
 0014 ◎ C 01/22 05/22 0.001│ToDo│m_hist_actions は不要なので削除？
 0015 ◎ C 01/22 05/22 0.001│問題│KuhnPoker：Checked-Checked, Raised-Called で精算にならず、３手目に行ってしまう？
-0016 ● C 01/22            │ToDo│
+0016 ◎ C 01/22 05/22 0.001│ToDo│Counterfractual value がマイナスになった場合は 0 に
 0017 ● C 01/22            │ToDo│
 0018 ● C 01/22            │ToDo│
 0019 ● C 01/22            │ToDo│
