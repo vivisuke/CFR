@@ -365,9 +365,6 @@ private:
 	//	deck[0] for Player1, deck[1] for Player2
 	vector<uchar> m_deck;
 	vector<uchar> m_hist_actions;					//	実行アクション履歴
-	//unordered_map<string, int[N_ACTIONS]> m_map;	//	状態 → 反事実後悔テーブル
-	//string		m_key = "   ";
-	//unordered_map<string, int[2]> m_map;			//	(FOLD, CALL) or (CHECK, RAISE) 順
 };
 //vector<uchar> g_deck;
 

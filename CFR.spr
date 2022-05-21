@@ -9,7 +9,7 @@
 0007 ◎ C 01/21 05/21 0.001│ToDo│KuhnPoker5C プロジェクト追加
 0008 ◎ C 01/21 05/21 0.001│ToDo│KuhnPoker3P プロジェクト追加
 0009 ◎ C 01/21 05/21 0.001│ToDo│playout() の bML 引数は削除
-0010 ● C 01/21            │ToDo│KuhnPoker::m_key, m_map は削除
+0010 ◎ C 01/21 05/22 0.001│ToDo│KuhnPoker::m_key, m_map は削除
 0011 ◎ C 01/21 05/22 0.001│ToDo│playout() の swapped 引数は削除
 0012 ● C 01/21            │ToDo│KuhnPoker3P：KuhnPoker3P::m_n_act_players 追加
 0013 ◎ C 01/22 05/22 0.001│ToDo│KuhnPoker4C プロジェクト削除
