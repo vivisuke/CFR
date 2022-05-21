@@ -292,7 +292,7 @@ public:
 	void swap_agents() {
 		swap(m_agents[0], m_agents[1]);
 	}
-	int playout(bool swapped = false) {
+	int playout() {
 		m_raised = false;
 		m_hist_actions.clear();
 		shuffle_deck();
@@ -302,10 +302,7 @@ public:
 		//act_random(PLAYER_1)
 		auto ut = playout_sub(m_deck[0], m_deck[1], 0, false);
 		#ifdef	DO_PRINT
-			if( !swapped )
-				cout << "utility = " << ut << "\n\n";
-			else
-				cout << "utility = " << -ut << "\n\n";
+			cout << "utility = " << ut << "\n\n";
 		#endif
 		return ut;
 	}
