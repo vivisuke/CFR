@@ -10,7 +10,7 @@ using namespace std;
 
 #define		DO_PRINT		1
 #define		N_PLAYERS		2
-#define		N_PLAYOUT		10
+#define		N_PLAYOUT		20
 //#define		N_PLAYOUT		(1000*1000)
 
 typedef unsigned char uchar;
@@ -35,8 +35,8 @@ const char *action_string[N_ACTIONS] = {
 };
 
 random_device g_rand;     	// 非決定的な乱数生成器
-//mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
-mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
+mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
+//mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 string		g_key = "   ";
 unordered_map<string, pair<int, int>> g_map;	//	<first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
@@ -269,7 +269,7 @@ public:
 		return ut;
 	}
 	//	return: 次の手番からみた利得
-	int playout_sub(uchar card1, uchar card2, int n_actions, const bool raised) {
+	int playout_sub(uchar card1, uchar card2, const int n_actions, const bool raised) {
 		int ut = 0;
 		int aix = n_actions % N_PLAYERS;
 		//int aix = m_hist_actions.size() % 2;
@@ -281,7 +281,7 @@ public:
 		if( act == ACT_FOLD ) {
 			ut = -1;
 		} else {
-			if( n_actions >= 2 && (act == ACT_CHECK || act == ACT_CALL) ) {
+			if( n_actions >= 1 && (act == ACT_CHECK || act == ACT_CALL) ) {
 				ut = card1 > card2 ? 1 : -1;
 				if (act == ACT_CALL)
 					ut *= 2;

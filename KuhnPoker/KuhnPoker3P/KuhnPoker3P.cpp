@@ -308,7 +308,7 @@ public:
 		return ut;
 	}
 	//	return: 次の手番からみた利得
-	int playout_sub(uchar card1, uchar card2, int n_actions, const bool raised) {
+	int playout_sub(uchar card1, uchar card2, const int n_actions, const bool raised) {
 		int ut = 0;
 		int aix = n_actions % 2;
 		auto act = m_agents[aix]->sel_action(card1, n_actions, raised);
@@ -319,7 +319,7 @@ public:
 		if( act == ACT_FOLD ) {
 			ut = -1;
 		} else {
-			if( n_actions >= 2 && (act == ACT_CHECK || act == ACT_CALL) ) {
+			if( n_actions >= 1 && (act == ACT_CHECK || act == ACT_CALL) ) {
 				ut = card1 > card2 ? 1 : -1;
 				if (act == ACT_CALL)
 					ut *= 2;
