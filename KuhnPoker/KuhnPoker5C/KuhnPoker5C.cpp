@@ -245,8 +245,6 @@ public:
 		}
 	}
 public:
-	//string		m_key = "   ";
-	//unordered_map<string, int[2]> m_map;		//	(FOLD, CALL) or (CHECK, RAISE) 順
 };
 
 //--------------------------------------------------------------------------------
@@ -291,7 +289,7 @@ public:
 	void swap_agents() {
 		swap(m_agents[0], m_agents[1]);
 	}
-	int playout(bool bML, bool swapped = false) {
+	int playout(bool swapped = false) {
 		m_raised = false;
 		m_hist_actions.clear();
 		shuffle_deck();
@@ -299,7 +297,7 @@ public:
 			print_deck();
 		#endif
 		//act_random(PLAYER_1)
-		auto ut = playout_sub(m_deck[0], m_deck[1], 0, false, bML);
+		auto ut = playout_sub(m_deck[0], m_deck[1], 0, false);
 		#ifdef	DO_PRINT
 			if( !swapped )
 				cout << "utility = " << ut << "\n\n";
@@ -309,7 +307,7 @@ public:
 		return ut;
 	}
 	//	return: 次の手番からみた効用
-	int playout_sub(uchar card1, uchar card2, int n_actions, const bool raised, bool bML) {
+	int playout_sub(uchar card1, uchar card2, int n_actions, const bool raised) {
 		int ut = 0;
 		int aix = m_hist_actions.size() % 2;
 		auto act = m_agents[aix]->sel_action(card1, n_actions, raised);
@@ -326,10 +324,10 @@ public:
 					ut *= 2;
 			} else {
 				//if( act == ACT_RAISE ) raised = true;
-				ut = -playout_sub(card2, card1, n_actions + 1, act == ACT_RAISE, bML);
+				ut = -playout_sub(card2, card1, n_actions + 1, act == ACT_RAISE);
 			}
 		}
-		if( bML && m_bML[n_actions % 2] /*&& n_actions == 2*/ ) {		//	学習ありの場合
+		if( m_bML[n_actions % 2] /*&& n_actions == 2*/ ) {		//	学習ありの場合
 			g_key[0] = "TJQKA"[card1 - RANK_10];
 			g_key[1] = '0' + n_actions;
 			g_key[2] = raised ? 'R' : ' ';
@@ -349,10 +347,10 @@ public:
 					if( n_actions != 0 ) {		//	CHECK → CHECK の場合
 						ut2 = card1 > card2 ? 1 : -1;
 					} else
-						ut2 = -playout_sub(card2, card1, n_actions + 1, false, /*bML:*/false);
+						ut2 = -playout_sub(card2, card1, n_actions + 1, false);
 					tbl.first += ut2 - ut;
 				} else {		//	CHECK 行動済み → RAISE を試す
-					ut2 = -playout_sub(card2, card1, n_actions + 1, /*raised:*/true, /*bML*/false);
+					ut2 = -playout_sub(card2, card1, n_actions + 1, /*raised:*/true);
 					tbl.second += ut2 - ut;
 				}
 			}
@@ -371,8 +369,8 @@ private:
 	vector<uchar> m_deck;
 	vector<uchar> m_hist_actions;					//	実行アクション履歴
 	//unordered_map<string, int[N_ACTIONS]> m_map;	//	状態 → 反事実後悔テーブル
-	string		m_key = "   ";
-	unordered_map<string, int[2]> m_map;			//	(FOLD, CALL) or (CHECK, RAISE) 順
+	//string		m_key = "   ";
+	//unordered_map<string, int[2]> m_map;			//	(FOLD, CALL) or (CHECK, RAISE) 順
 };
 //vector<uchar> g_deck;
 
@@ -390,7 +388,7 @@ int main()
 		#ifdef DO_PRINT
 			cout << "#" << (i+1) << ": ";
 		#endif
-		sum += kp.playout(/*bML*/true);
+		sum += kp.playout();
 	}
 	cout << "g_map.size() = " << g_map.size() << "\n\n";
 #if	1
@@ -406,20 +404,6 @@ int main()
 	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr) {
 		const pair<int, int> &tbl = (*itr).second;
 		cout << (*itr).first << ": " << tbl.first << ", " << tbl.second << "\n";
-	}
-#endif
-#if	0
-	for (int i = 0; i < N_PLAYOUT/2; ++i) {
-		#ifdef DO_PRINT
-			cout << "#" << (i*2+1) << ": ";
-		#endif
-		sum += kp.playout(false, false);
-		kp.swap_agents();
-		#ifdef DO_PRINT
-			cout << "#" << (i*2+2) << ": ";
-		#endif
-		sum -= kp.playout(false, true);
-		kp.swap_agents();
 	}
 #endif
 	cout << "\nave(ut) = " << (double)sum/N_PLAYOUT << "\n";
