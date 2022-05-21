@@ -294,7 +294,8 @@ public:
 	}
 	int playout() {
 		m_raised = false;
-		m_hist_actions.clear();
+		m_n_active = N_PLAYERS;		//	フォールドしていないプレイヤー数
+		//m_hist_actions.clear();
 		shuffle_deck();
 		#ifdef DO_PRINT
 			print_deck();
@@ -306,19 +307,19 @@ public:
 		#endif
 		return ut;
 	}
-	//	return: 次の手番からみた効用
+	//	return: 次の手番からみた利得
 	int playout_sub(uchar card1, uchar card2, int n_actions, const bool raised) {
 		int ut = 0;
-		int aix = m_hist_actions.size() % 2;
+		int aix = n_actions % 2;
 		auto act = m_agents[aix]->sel_action(card1, n_actions, raised);
 		#ifdef DO_PRINT
-			cout << m_hist_actions.size() + 1 << ": " << action_string[act] << "\n";
+			cout << n_actions + 1 << ": " << action_string[act] << "\n";
 		#endif
-		m_hist_actions.push_back(act);
+		//m_hist_actions.push_back(act);
 		if( act == ACT_FOLD ) {
 			ut = -1;
 		} else {
-			if( m_hist_actions.size() >= 2 && (act == ACT_CHECK || act == ACT_CALL) ) {
+			if( n_actions >= 2 && (act == ACT_CHECK || act == ACT_CALL) ) {
 				ut = card1 > card2 ? 1 : -1;
 				if (act == ACT_CALL)
 					ut *= 2;
@@ -355,11 +356,12 @@ public:
 				}
 			}
 		}
-		m_hist_actions.pop_back();
+		//m_hist_actions.pop_back();
 		return ut;
 	}
 private:
 	bool	m_raised;
+	int		m_n_active;			//	フォールドしていないプレイヤー数
 	//Agent	*m_agent1;
 	//Agent	*m_agent2;
 	Agent	*m_agents[N_PLAYERS];
@@ -367,7 +369,7 @@ private:
 	
 	//	deck[0] for Player1, deck[1] for Player2
 	vector<uchar> m_deck;
-	vector<uchar> m_hist_actions;					//	実行アクション履歴
+	//vector<uchar> m_hist_actions;					//	実行アクション履歴
 	//unordered_map<string, int[N_ACTIONS]> m_map;	//	状態 → 反事実後悔テーブル
 	string		m_key = "   ";
 	unordered_map<string, int[2]> m_map;			//	(FOLD, CALL) or (CHECK, RAISE) 順
