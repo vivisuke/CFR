@@ -336,10 +336,10 @@ public:
 			if( raised ) {
 				//	FOLD, CALL 順
 				if( act == ACT_CALL ) {		//	CALL行動済み → FOLD を試す
-					tbl.first += -1 - ut;
+					tbl.first = max(0, tbl.first -1 - ut);
 				} else {		//	FOLD 行動済み → CALL を試す
 					ut2 = card1 > card2 ? 2 : -2;
-					tbl.second += ut2 - ut;
+					tbl.second = max(0, tbl.second + ut2 - ut);
 				}
 			} else {
 				//	CHECK, RAISE 順
@@ -348,10 +348,10 @@ public:
 						ut2 = card1 > card2 ? 1 : -1;
 					} else
 						ut2 = -playout_sub(card2, card1, n_actions + 1, false, /*noML:*/true);
-					tbl.first += ut2 - ut;
+					tbl.first = max(0, tbl.first + ut2 - ut);
 				} else {		//	CHECK 行動済み → RAISE を試す
 					ut2 = -playout_sub(card2, card1, n_actions + 1, /*raised:*/true, /*noML:*/true);
-					tbl.second += ut2 - ut;
+					tbl.second = max(0, tbl.second + ut2 - ut);
 				}
 			}
 		}
@@ -371,6 +371,12 @@ private:
 };
 //vector<uchar> g_deck;
 
+string sprint(int n, int wd) {
+	string txt = to_string(n);
+	if( txt.size() < wd )
+		txt = string(wd - txt.size(), ' ') + txt;
+	return txt;
+}
 int main()
 {
 	KuhnPoker kp;
@@ -395,7 +401,12 @@ int main()
 	sort(lst.begin(), lst.end());
 	for (auto itr = lst.begin(); itr != lst.end(); ++itr) {
 		const pair<int, int> &tbl = g_map[*itr];
-		cout << (*itr) << ": " << tbl.first << ", " << tbl.second << "\n";
+		cout << (*itr) << ": " << tbl.first << ", " << tbl.second;
+		if( tbl.first > 0 || tbl.second > 0 ) {
+			auto sum = tbl.first + tbl.second;
+			cout << "\t(" << sprint(tbl.first * 100 / sum, 3) << "%, " << sprint(tbl.second * 100 / sum, 3) << "%)";
+		}
+		cout << "\n";
 	}
 #else
 	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr) {
