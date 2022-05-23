@@ -8,9 +8,13 @@
 
 using namespace std;
 
+random_device g_rand;     	// 非決定的な乱数生成器
+mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
+//mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
+
 #define		DO_PRINT		0
 #define		N_PLAYERS		2
-//#define		N_PLAYOUT		20
+//#define		N_PLAYOUT		200
 #define		N_PLAYOUT		(1000*1000)
 
 typedef unsigned char uchar;
@@ -34,12 +38,11 @@ const char *action_string[N_ACTIONS] = {
 	"Folded", "Checked", "Called", "Raised",
 };
 
-random_device g_rand;     	// 非決定的な乱数生成器
-mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
-//mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
-
+int			g_n_playout = 0;					//	プレイアウト回数
 string		g_key = "   ";
 unordered_map<string, pair<int, int>> g_map;	//	<first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
+//vector<int>	g_cnt_card = {0, 0, 0};
+//vector<uchar> g_hist_actions;					//	実行アクション履歴
 
 class Agent {
 public:
@@ -251,17 +254,28 @@ public:
 	void shuffle_deck() {
 		shuffle(m_deck.begin(), m_deck.end(), g_mt);
 	}
-	void swap_agents() {
-		swap(m_agents[0], m_agents[1]);
+	void print_hist_actions() {
+		for (int i = 0; i != m_hist_actions.size(); ++i) {
+			cout << action_string[m_hist_actions[i]] << ", ";
+		}
+		cout << "\n";
 	}
+	//void swap_agents() {
+	//	swap(m_agents[0], m_agents[1]);
+	//}
 	int playout() {
+		//if( g_n_playout == 103 ) {
+		//	cout << "g_n_playout == 103\n";
+		//	print_deck();
+		//}
 		m_raised = false;
-		//m_hist_actions.clear();
+		m_hist_actions.clear();
 		shuffle_deck();
 		#if DO_PRINT
 			print_deck();
 		#endif
 		//act_random(PLAYER_1)
+		//m_cnt_card = {0, 0, 0};		//	for J, Q, K カウント
 		auto ut = playout_sub(m_deck[0], m_deck[1], 0, false);
 		#if	DO_PRINT
 			cout << "utility = " << ut << "\n\n";
@@ -269,7 +283,7 @@ public:
 		return ut;
 	}
 	//	return: 次の手番からみた利得
-	int playout_sub(uchar card1, uchar card2, const int n_actions, const bool raised) {
+	int playout_sub(uchar card1, uchar card2, const int n_actions, const bool raised, bool noML = false) {
 		int ut = 0;
 		int aix = n_actions % N_PLAYERS;
 		//int aix = m_hist_actions.size() % 2;
@@ -277,7 +291,7 @@ public:
 		#if DO_PRINT
 			cout << n_actions + 1 << ": " << action_string[act] << "\n";
 		#endif
-		//m_hist_actions.push_back(act);
+		m_hist_actions.push_back(act);
 		if( act == ACT_FOLD ) {
 			ut = -1;
 		} else {
@@ -290,10 +304,24 @@ public:
 				ut = -playout_sub(card2, card1, n_actions + 1, act == ACT_RAISE);
 			}
 		}
-		if( m_bML[n_actions % 2] ) {		//	学習ありの場合
+		if( !noML && m_bML[n_actions % 2] ) {		//	学習ありの場合
 			g_key[0] = "JQK"[card1 - RANK_J];
 			g_key[1] = '0' + n_actions;
 			g_key[2] = raised ? 'R' : ' ';
+#if	0
+			if( /*g_key == "Q1R" ||*/ g_key == "Q2R" ) {
+				//cout << g_key << "\n";
+				if( g_n_playout >= 100 ) {
+					g_cnt_card[card2 - RANK_J] += 1;
+					if( card2 == RANK_J ) {
+						cout << "#" << g_n_playout << ": card2 == RANK_J\n";
+						print_deck();
+						print_hist_actions();
+					}
+				}
+				//cout << m_cnt_card[0] << ", " << m_cnt_card[1] << ", " << m_cnt_card[2] << "\n";
+			}
+#endif
 			auto &tbl = g_map[g_key];
 			int ut2;
 			if( raised ) {
@@ -309,16 +337,17 @@ public:
 				if( act == ACT_RAISE ) {		//	RAISE 行動済み → CHECK を試す
 					if( n_actions != 0 ) {		//	CHECK → CHECK の場合
 						ut2 = card1 > card2 ? 1 : -1;
-					} else
-						ut2 = -playout_sub(card2, card1, n_actions + 1, false);
+					} else {
+						ut2 = -playout_sub(card2, card1, n_actions + 1, false, /*noML:*/true);
+					}
 					tbl.first = max(0, tbl.first + ut2 - ut);
 				} else {		//	CHECK 行動済み → RAISE を試す
-					ut2 = -playout_sub(card2, card1, n_actions + 1, /*raised:*/true);
+					ut2 = -playout_sub(card2, card1, n_actions + 1, /*raised:*/true, /*noML:*/true);
 					tbl.second = max(0, tbl.second + ut2 - ut);
 				}
 			}
 		}
-		//m_hist_actions.pop_back();
+		m_hist_actions.pop_back();
 		return ut;
 	}
 private:
@@ -330,10 +359,20 @@ private:
 	
 	//	deck[0] for Player1, deck[1] for Player2
 	vector<uchar> m_deck;
-	//vector<uchar> m_hist_actions;					//	実行アクション履歴
+	vector<uchar> m_hist_actions;					//	実行アクション履歴
+//public:
+	//vector<int>	m_cnt_card;
 };
 //vector<uchar> g_deck;
 
+string sprint(int n, int wd) {
+	string txt = to_string(n);
+	if( txt.size() < wd )
+		txt = string(wd - txt.size(), ' ') + txt;
+	return txt;
+}
+
+//KuhnPoker g_kp;
 int main()
 {
 	KuhnPoker kp;
@@ -342,17 +381,21 @@ int main()
 	//kp.print_deck();
 	int sum = 0;
 	//const int N_PLAYOUT = 1000*1000;
+	//g_cnt_card = { 0, 0, 0 };
+	g_n_playout = 0;
 	cout << "N_PLAYOUT = " << N_PLAYOUT << "\n\n";
 	for (int i = 0; i < N_PLAYOUT; ) {
 		#if DO_PRINT
 			cout << "#" << (i+1) << ": ";
 		#endif
+		++g_n_playout;
 		sum += kp.playout();
 		if( (++i % (N_PLAYOUT/10)) == 0 ) {
 			//cout << "ave(ut) = " << (double)sum / (N_PLAYOUT/10) << "\n";
 			sum = 0;
 		}
 	}
+	//cout << g_cnt_card[0] << ", " << g_cnt_card[1] << ", " << g_cnt_card[2] << "\n";
 	//cout << "\nave(ut) = " << (double)sum / N_PLAYOUT << "\n";
 	//
 	cout << "\ng_map.size() = " << g_map.size() << "\n\n";
@@ -364,9 +407,9 @@ int main()
 	for (auto itr = lst.begin(); itr != lst.end(); ++itr) {
 		const pair<int, int> &tbl = g_map[*itr];
 		cout << (*itr) << ": " << tbl.first << ", " << tbl.second;
-		if( tbl.first > 0 && tbl.second > 0 ) {
+		if( tbl.first > 0 || tbl.second > 0 ) {
 			auto sum = tbl.first + tbl.second;
-			cout << " (" << tbl.first * 100 / sum << "%, " << tbl.second * 100 / sum << "%)";
+			cout << "\t(" << sprint(tbl.first * 100 / sum, 3) << "%, " << sprint(tbl.second * 100 / sum, 3) << "%)";
 		}
 		cout << "\n";
 	}

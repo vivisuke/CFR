@@ -16,7 +16,9 @@
 0014 ◎ C 01/22 05/22 0.001│ToDo│m_hist_actions は不要なので削除？
 0015 ◎ C 01/22 05/22 0.001│問題│KuhnPoker：Checked-Checked, Raised-Called で精算にならず、３手目に行ってしまう？
 0016 ◎ C 01/22 05/22 0.001│ToDo│Counterfractual value がマイナスになった場合は 0 に
-0017 ● C 01/22            │ToDo│
-0018 ● C 01/22            │ToDo│
-0019 ● C 01/22            │ToDo│
-0020 ● C 01/22            │ToDo│
+0017 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker：CFR 自己対戦学習で混合戦略ナッシュ均衡にならない
+0018 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker > CFR 自己対戦学習：Q Check-Raise の場合に 100% コールしている（プレイアウト：100回）
+0019 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker > CFR 自己対戦学習：J のレイズ確率は0%のはずなのに、３手目に相手のランクがJの場合がある？？？
+									原因：Checked→Checked なのに精算処理されていない？ → されている
+									原因：反事実：Checked→Raised の場合も学習処理を行っている
+0020 ● C 01/23            │ToDo│

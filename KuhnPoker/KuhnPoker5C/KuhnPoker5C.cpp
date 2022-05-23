@@ -7,7 +7,14 @@
 
 using namespace std;
 
+random_device g_rand;     	// 非決定的な乱数生成器
+mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
+//mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
+
 //#define		DO_PRINT		1
+#define		N_PLAYERS		2
+#define		N_PLAYOUT		200
+//#define		N_PLAYOUT		(1000*1000)
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -31,10 +38,6 @@ enum {
 const char *action_string[N_ACTIONS] = {
 	"Folded", "Checked", "Called", "Raised",
 };
-
-random_device g_rand;     	// 非決定的な乱数生成器
-mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
-//mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 string		g_key = "   ";
 unordered_map<string, pair<int, int>> g_map;	//	<first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
@@ -304,7 +307,7 @@ public:
 		return ut;
 	}
 	//	return: 次の手番からみた利得
-	int playout_sub(uchar card1, uchar card2, const int n_actions, const bool raised) {
+	int playout_sub(uchar card1, uchar card2, const int n_actions, const bool raised, bool noML = false) {
 		int ut = 0;
 		int aix = n_actions % 2;
 		auto act = m_agents[aix]->sel_action(card1, n_actions, raised);
@@ -324,7 +327,7 @@ public:
 				ut = -playout_sub(card2, card1, n_actions + 1, act == ACT_RAISE);
 			}
 		}
-		if( m_bML[n_actions % 2] /*&& n_actions == 2*/ ) {		//	学習ありの場合
+		if( !noML && m_bML[n_actions % 2] /*&& n_actions == 2*/ ) {		//	学習ありの場合
 			g_key[0] = "TJQKA"[card1 - RANK_10];
 			g_key[1] = '0' + n_actions;
 			g_key[2] = raised ? 'R' : ' ';
@@ -344,10 +347,10 @@ public:
 					if( n_actions != 0 ) {		//	CHECK → CHECK の場合
 						ut2 = card1 > card2 ? 1 : -1;
 					} else
-						ut2 = -playout_sub(card2, card1, n_actions + 1, false);
+						ut2 = -playout_sub(card2, card1, n_actions + 1, false, /*noML:*/true);
 					tbl.first += ut2 - ut;
 				} else {		//	CHECK 行動済み → RAISE を試す
-					ut2 = -playout_sub(card2, card1, n_actions + 1, /*raised:*/true);
+					ut2 = -playout_sub(card2, card1, n_actions + 1, /*raised:*/true, /*noML:*/true);
 					tbl.second += ut2 - ut;
 				}
 			}
@@ -376,7 +379,7 @@ int main()
 	//kp.print_deck();
 	int sum = 0;
 	//const int N_PLAYOUT = 10;
-	const int N_PLAYOUT = 1000*1000;
+	//const int N_PLAYOUT = 1000*1000;
 	cout << "N_PLAYOUT = " << N_PLAYOUT << "\n\n";
 	for (int i = 0; i < N_PLAYOUT; ++i) {
 		#ifdef DO_PRINT
