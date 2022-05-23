@@ -309,10 +309,12 @@ public:
 			m_utility[i] = -1;			//	参加費
 		}
 		playout_sub(0, 0, N_PLAYERS, N_PLAYERS, false);
+		//
+		cout << "ut[] = {";
 		for (int i = 0; i != N_PLAYERS; ++i) {
 			cout << m_utility[i] << ", ";
 		}
-		cout << "\n";
+		cout << "}\n";
 	}
 	void playout_sub(const int ix, int n_actions, int n_active, int pot, bool raised) {
 		if( m_utility[ix] != -2 ) {		//	当該プレイヤーがレイズしていない場合
@@ -334,7 +336,7 @@ public:
 				//++n_actions;
 			//}
 			int nix = (ix + 1) % N_PLAYERS;		//	次のプレイヤー
-			if( !raised && nix == 0 ) {	//	チェックで１周してきた場合
+			if( !raised && nix == 0 ) {	//	チェックで１周した場合
 				calc_utility(pot);
 			} else if( n_active > 1 ) {		//	まだ複数のプレイヤーがいる場合
 				playout_sub(nix, n_actions + 1, n_active, pot, raised);
@@ -344,7 +346,7 @@ public:
 			if( act == ACT_FOLD ) {
 				m_folded[ix] = false;
 			} else if( act == ACT_RAISE || act == ACT_CALL ) {
-				m_utility[ix] += 1;			//	レイズ額は常に１
+				//m_utility[ix] += 1;			//	レイズ額は常に１
 			}
 		} else { 		//	レイズで１周してきた場合
 			calc_utility(pot);
