@@ -9,6 +9,7 @@ using namespace std;
 
 #define		DO_PRINT		1
 #define		N_PLAYERS		3
+#define		N_PLAYOUT		10
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -379,7 +380,7 @@ int main()
 {
 	KuhnPoker3P kp;
 	int sum = 0;
-	const int N_PLAYOUT = 10;
+	//const int N_PLAYOUT = 10;
 	//const int N_PLAYOUT = 1000*1000;
 	cout << "N_PLAYOUT = " << N_PLAYOUT << "\n\n";
 	for (int i = 0; i < N_PLAYOUT; ++i) {

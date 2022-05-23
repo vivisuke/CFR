@@ -13,8 +13,8 @@ mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
 
 //#define		DO_PRINT		1
 #define		N_PLAYERS		2
-#define		N_PLAYOUT		200
-//#define		N_PLAYOUT		(1000*1000)
+//#define		N_PLAYOUT		200
+#define		N_PLAYOUT		(1000*1000)
 
 typedef unsigned char uchar;
 typedef unsigned int uint;

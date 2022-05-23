@@ -23,7 +23,7 @@
 									原因：反事実：Checked→Raised の場合も学習処理を行っている
 0020 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker5C > 学習結果：％表示
 0021 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker5C：反事実テーブルの値が0未満にならないように
-0022 ● C 01/23            │ToDo│
+0022 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker, CFRAgent::m_map 削除
 0023 ● C 01/23            │ToDo│
 0024 ● C 01/23            │ToDo│
 0025 ● C 01/23            │ToDo│
