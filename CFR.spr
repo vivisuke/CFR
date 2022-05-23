@@ -25,7 +25,7 @@
 0021 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker5C：反事実テーブルの値が0未満にならないように
 0022 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker, CFRAgent::m_map 削除
 0023 ◎ C 01/24 05/24 0.001│ToDo│KuhnPoker3P：playout_sub() で再帰的に試行
-0024 ● C 01/24            │ToDo│
+0024 ◎ C 01/24 05/24 0.001│問題│KuhnPoker3P：レイズ、フォールド、フォールドのとき、ut[1] が 0 になっている
 0025 ● C 01/24            │ToDo│
 0026 ● C 01/24            │ToDo│
 0027 ● C 01/24            │ToDo│

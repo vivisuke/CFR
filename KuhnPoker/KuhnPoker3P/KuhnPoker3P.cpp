@@ -314,7 +314,7 @@ public:
 		}
 		cout << "\n";
 	}
-	void playout_sub(int ix, int n_actions, int n_active, int pot, bool raised) {
+	void playout_sub(const int ix, int n_actions, int n_active, int pot, bool raised) {
 		if( m_utility[ix] != -2 ) {		//	当該プレイヤーがレイズしていない場合
 			//if( !m_folded[ix] ) {
 				auto act = m_agents[ix]->sel_action(m_deck[ix], n_actions, raised);
@@ -333,11 +333,11 @@ public:
 				}
 				//++n_actions;
 			//}
-			ix = (ix + 1) % N_PLAYERS;		//	次のプレイヤー
-			if( !raised && ix == 0 ) {	//	チェックで１周してきた場合
+			int nix = (ix + 1) % N_PLAYERS;		//	次のプレイヤー
+			if( !raised && nix == 0 ) {	//	チェックで１周してきた場合
 				calc_utility(pot);
 			} else if( n_active > 1 ) {		//	まだ複数のプレイヤーがいる場合
-				playout_sub(ix, n_actions + 1, n_active, pot, raised);
+				playout_sub(nix, n_actions + 1, n_active, pot, raised);
 			} else {	//	降りていないプレイヤーが一人だけになった場合
 				calc_utility(pot);
 			}
