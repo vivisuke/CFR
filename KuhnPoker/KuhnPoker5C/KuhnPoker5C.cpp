@@ -327,6 +327,7 @@ public:
 				ut = -playout_sub(card2, card1, n_actions + 1, act == ACT_RAISE);
 			}
 		}
+#if	0
 		if( !noML && m_bML[n_actions % 2] /*&& n_actions == 2*/ ) {		//	学習ありの場合
 			g_key[0] = "TJQKA"[card1 - RANK_10];
 			g_key[1] = '0' + n_actions;
@@ -355,6 +356,7 @@ public:
 				}
 			}
 		}
+#endif
 		//m_hist_actions.pop_back();
 		return ut;
 	}

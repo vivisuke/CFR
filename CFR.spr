@@ -24,11 +24,11 @@
 0020 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker5C > 学習結果：％表示
 0021 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker5C：反事実テーブルの値が0未満にならないように
 0022 ◎ C 01/23 05/23 0.001│ToDo│KuhnPoker, CFRAgent::m_map 削除
-0023 ● C 01/23            │ToDo│
-0024 ● C 01/23            │ToDo│
-0025 ● C 01/23            │ToDo│
-0026 ● C 01/23            │ToDo│
-0027 ● C 01/23            │ToDo│
-0028 ● C 01/23            │ToDo│
-0029 ● C 01/23            │ToDo│
-0030 ● C 01/23            │ToDo│
+0023 ◎ C 01/24 05/24 0.001│ToDo│KuhnPoker3P：playout_sub() で再帰的に試行
+0024 ● C 01/24            │ToDo│
+0025 ● C 01/24            │ToDo│
+0026 ● C 01/24            │ToDo│
+0027 ● C 01/24            │ToDo│
+0028 ● C 01/24            │ToDo│
+0029 ● C 01/24            │ToDo│
+0030 ● C 01/24            │ToDo│

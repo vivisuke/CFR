@@ -7,6 +7,10 @@
 
 using namespace std;
 
+random_device g_rand;     	// 非決定的な乱数生成器
+//mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
+mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
+
 #define		DO_PRINT		1
 #define		N_PLAYERS		3
 #define		N_PLAYOUT		10
@@ -33,10 +37,6 @@ enum {
 const char *action_string[N_ACTIONS] = {
 	"Folded", "Checked", "Called", "Raised",
 };
-
-random_device g_rand;     	// 非決定的な乱数生成器
-mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
-//mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 string		g_key = "   ";
 unordered_map<string, pair<int, int>> g_map;	//	<first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
@@ -267,12 +267,15 @@ public:
 		//m_agents[1] = new BullishAgent();		//	常に強気プレイヤー
 		m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[1] = new BearishAgent();		//	常に弱気プレイヤー
+		m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
 		//
 		m_bML[0] = m_agents[0]->get_name() == "CFRAgent";
 		m_bML[1] = m_agents[1]->get_name() == "CFRAgent";
+		m_bML[2] = m_agents[2]->get_name() == "CFRAgent";
 		//
 		cout << "Player1: " << m_agents[0]->get_name() << "\n";
 		cout << "Player2: " << m_agents[1]->get_name() << "\n";
+		cout << "Player3: " << m_agents[2]->get_name() << "\n";
 		//
 		//m_deck.push_back(RANK_10);
 		m_deck.push_back(RANK_J);
@@ -293,87 +296,88 @@ public:
 	void swap_agents() {
 		swap(m_agents[0], m_agents[1]);
 	}
-	int playout() {
-		m_raised = false;
-		m_n_active = N_PLAYERS;		//	フォールドしていないプレイヤー数
+	void playout() {
+		bool raised = false;
+		int n_active = N_PLAYERS;		//	フォールドしていないプレイヤー数
 		//m_hist_actions.clear();
 		shuffle_deck();
 		#ifdef DO_PRINT
 			print_deck();
 		#endif
-		//act_random(PLAYER_1)
-		auto ut = playout_sub(m_deck[0], m_deck[1], 0, false);
-		#ifdef	DO_PRINT
-			cout << "utility = " << ut << "\n\n";
-		#endif
-		return ut;
+		for (int i = 0; i != N_PLAYERS; ++i) {
+			m_folded[i] = false;
+			m_utility[i] = -1;			//	参加費
+		}
+		playout_sub(0, 0, N_PLAYERS, N_PLAYERS, false);
+		for (int i = 0; i != N_PLAYERS; ++i) {
+			cout << m_utility[i] << ", ";
+		}
+		cout << "\n";
 	}
-	//	return: 次の手番からみた利得
-	int playout_sub(uchar card1, uchar card2, const int n_actions, const bool raised) {
-		int ut = 0;
-		int aix = n_actions % 2;
-		auto act = m_agents[aix]->sel_action(card1, n_actions, raised);
-		#ifdef DO_PRINT
-			cout << n_actions + 1 << ": " << action_string[act] << "\n";
-		#endif
-		//m_hist_actions.push_back(act);
-		if( act == ACT_FOLD ) {
-			ut = -1;
-		} else {
-			if( n_actions >= 1 && (act == ACT_CHECK || act == ACT_CALL) ) {
-				ut = card1 > card2 ? 1 : -1;
-				if (act == ACT_CALL)
-					ut *= 2;
-			} else {
-				//if( act == ACT_RAISE ) raised = true;
-				ut = -playout_sub(card2, card1, n_actions + 1, act == ACT_RAISE);
+	void playout_sub(int ix, int n_actions, int n_active, int pot, bool raised) {
+		if( m_utility[ix] != -2 ) {		//	当該プレイヤーがレイズしていない場合
+			//if( !m_folded[ix] ) {
+				auto act = m_agents[ix]->sel_action(m_deck[ix], n_actions, raised);
+				cout << (n_actions+1) << ": " << action_string[act] << "\n";
+				if( act == ACT_FOLD ) {
+					m_folded[ix] = true;
+					n_active -= 1;
+				} else if( act == ACT_RAISE ) {
+					raised = true;
+					m_utility[ix] -= 1;			//	レイズ額は常に１
+					pot += 1;
+				} else if( act == ACT_CALL ) {
+					m_utility[ix] -= 1;			//	レイズ額は常に１
+					pot += 1;
+				} else {	//	act == ACT_CHECK
+				}
+				//++n_actions;
+			//}
+			ix = (ix + 1) % N_PLAYERS;		//	次のプレイヤー
+			if( !raised && ix == 0 ) {	//	チェックで１周してきた場合
+				calc_utility(pot);
+			} else if( n_active > 1 ) {		//	まだ複数のプレイヤーがいる場合
+				playout_sub(ix, n_actions + 1, n_active, pot, raised);
+			} else {	//	降りていないプレイヤーが一人だけになった場合
+				calc_utility(pot);
+			}
+			if( act == ACT_FOLD ) {
+				m_folded[ix] = false;
+			} else if( act == ACT_RAISE || act == ACT_CALL ) {
+				m_utility[ix] += 1;			//	レイズ額は常に１
+			}
+		} else { 		//	レイズで１周してきた場合
+			calc_utility(pot);
+		}
+	}
+	void calc_utility(int pot) {	//	pot チップを勝者に
+		int mxcd = 0;
+		int mxi;
+		for (int i = 0; i != N_PLAYERS; ++i) {
+			if( !m_folded[i] && m_deck[i] > mxcd ) {
+				mxcd = m_deck[i];
+				mxi = i;
 			}
 		}
-		if( m_bML[n_actions % N_PLAYERS] /*&& n_actions == 2*/ ) {		//	学習ありの場合
-			g_key[0] = "TJQKA"[card1 - RANK_10];
-			g_key[1] = '0' + n_actions;
-			g_key[2] = raised ? 'R' : ' ';
-			auto &tbl = g_map[g_key];
-			int ut2;
-			if( raised ) {
-				//	FOLD, CALL 順
-				if( act == ACT_CALL ) {		//	CALL行動済み → FOLD を試す
-					tbl.first += -1 - ut;
-				} else {		//	FOLD 行動済み → CALL を試す
-					ut2 = card1 > card2 ? 2 : -2;
-					tbl.second += ut2 - ut;
-				}
-			} else {
-				//	CHECK, RAISE 順
-				if( act == ACT_RAISE ) {		//	RAISE 行動済み → CHECK を試す
-					if( n_actions != 0 ) {		//	CHECK → CHECK の場合
-						ut2 = card1 > card2 ? 1 : -1;
-					} else
-						ut2 = -playout_sub(card2, card1, n_actions + 1, false);
-					tbl.first += ut2 - ut;
-				} else {		//	CHECK 行動済み → RAISE を試す
-					ut2 = -playout_sub(card2, card1, n_actions + 1, /*raised:*/true);
-					tbl.second += ut2 - ut;
-				}
-			}
-		}
-		//m_hist_actions.pop_back();
-		return ut;
+		m_utility[mxi] += pot;
 	}
 private:
-	bool	m_raised;
-	int		m_n_active;			//	フォールドしていないプレイヤー数
+	//bool	m_raised;
+	//int		m_n_active;			//	フォールドしていないプレイヤー数
 	//Agent	*m_agent1;
 	//Agent	*m_agent2;
 	Agent	*m_agents[N_PLAYERS];
 	bool	m_bML[N_PLAYERS];			//	学習対応エージェント？
+	bool	m_folded[N_PLAYERS];
 	
 	//	deck[0] for Player1, deck[1] for Player2
 	vector<uchar> m_deck;
 	//vector<uchar> m_hist_actions;					//	実行アクション履歴
 	//unordered_map<string, int[N_ACTIONS]> m_map;	//	状態 → 反事実後悔テーブル
-	string		m_key = "   ";
-	unordered_map<string, int[2]> m_map;			//	(FOLD, CALL) or (CHECK, RAISE) 順
+	//string		m_key = "   ";
+	//unordered_map<string, int[2]> m_map;			//	(FOLD, CALL) or (CHECK, RAISE) 順
+public:
+	int		m_utility[N_PLAYERS];		//	１プレイアウトでの各プレイヤーの効用（利得）
 };
 //--------------------------------------------------------------------------------
 int main()
@@ -387,7 +391,7 @@ int main()
 		#ifdef DO_PRINT
 			cout << "#" << (i+1) << ": ";
 		#endif
-		sum += kp.playout();
+		kp.playout();
 	}
 	//
 	//cout << "\nave(ut) = " << (double)sum/N_PLAYOUT << "\n";
