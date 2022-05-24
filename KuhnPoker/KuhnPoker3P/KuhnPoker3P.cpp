@@ -11,9 +11,10 @@ random_device g_rand;     	// 非決定的な乱数生成器
 mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
 //mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
-#define		DO_PRINT		1
+//#define		DO_PRINT		1
 #define		N_PLAYERS		3
-#define		N_PLAYOUT		10
+//#define		N_PLAYOUT		100
+#define		N_PLAYOUT		(1000*1000)
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -42,11 +43,24 @@ string		g_key = "12345";						//	[0] for ランク、[1]... for actions（'C' fo
 unordered_map<string, pair<int, int>> g_map;	//	<first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
 
 void setup_key(uchar card, const vector<uchar>& hist) {
+#if	1
+	char b[6];
+	b[0] = "TJQKA"[card - RANK_10];
+	for (int i = 0; i != hist.size(); ++i) {
+		b[i+1] = "FcCR"[hist[i]];
+	}
+	b[hist.size()+1] = '\0';
+	g_key = b;
+#else
 	g_key[0] = "TJQKA"[card - RANK_10];
 	for (int i = 0; i != hist.size(); ++i) {
 		g_key[i+1] = "FcCR"[hist[i]];
 	}
 	g_key[hist.size()+1] = '\0';
+#endif
+	if( g_key.back() == '5' ) {
+		cout << g_key << " ???\n";
+	}
 }
 class Agent {
 public:
@@ -326,7 +340,9 @@ public:
 		while( n_active > 1 && m_ut[ix] != -2 ) {
 			if( !m_folded[ix] ) {
 				auto act = m_agents[ix]->sel_action(m_deck[ix], n_actions, raised);
+#if DO_PRINT
 				cout << (n_actions+1) << ": " << action_string[act] << "\n";
+#endif
 				if( act == ACT_FOLD ) {
 					m_folded[ix] = true;
 					n_active -= 1;
@@ -349,18 +365,22 @@ public:
 		calc_utility(pot);
 #endif
 		//
+#if	DO_PRINT
 		cout << "ut[] = {";
 		for (int i = 0; i != N_PLAYERS; ++i) {
 			cout << m_utility[i] << ", ";
 		}
 		cout << "}\n\n";
+#endif
 	}
 	void playout_sub(const int ix, int n_actions, int n_active, int pot, bool raised) {
 		if( m_ut[ix] != -2 ) {		//	当該プレイヤーがレイズしていない場合
 			//if( !m_folded[ix] ) {
 			//	フォールドした人に手番が回ってくることはないので !m_folded[ix] チェックは不要
 			auto act = m_agents[ix]->sel_action(m_deck[ix], m_hist_actions, raised);
+#if	DO_PRINT
 			cout << (n_actions+1) << ": " << action_string[act] << "\n";
+#endif
 			if( act == ACT_FOLD ) {
 				m_folded[ix] = true;
 				n_active -= 1;
@@ -387,7 +407,11 @@ public:
 			}
 			//
 			setup_key(m_deck[ix], m_hist_actions);
-			cout << g_key << "\n";
+			//cout << g_key << "\n";
+			auto itr = g_map.find(g_key);
+			if( itr == g_map.end() ) {
+				g_map[g_key] = pair<int, int>(0, 0);
+			}
 			//	状態をもとに戻す
 			if( act == ACT_FOLD ) {
 				m_folded[ix] = false;
@@ -432,6 +456,12 @@ public:
 	int		m_utility[N_PLAYERS];		//	１プレイアウトでの各プレイヤーの効用（利得）
 };
 //--------------------------------------------------------------------------------
+string sprint(int n, int wd) {
+	string txt = to_string(n);
+	if( txt.size() < wd )
+		txt = string(wd - txt.size(), ' ') + txt;
+	return txt;
+}
 int main()
 {
 	KuhnPoker3P kp;
@@ -447,6 +477,21 @@ int main()
 	}
 	//
 	//cout << "\nave(ut) = " << (double)sum/N_PLAYOUT << "\n";
+	//
+	cout << "g_map.size() = " << g_map.size() << "\n\n";
+	vector<string> lst;
+	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr)
+		lst.push_back((*itr).first);
+	sort(lst.begin(), lst.end());
+	for (auto itr = lst.begin(); itr != lst.end(); ++itr) {
+		const pair<int, int> &tbl = g_map[*itr];
+		cout << (*itr) << ":\t" << tbl.first << ", " << tbl.second;
+		if( tbl.first > 0 || tbl.second > 0 ) {
+			auto sum = tbl.first + tbl.second;
+			cout << "\t(" << sprint(tbl.first * 100 / sum, 3) << "%, " << sprint(tbl.second * 100 / sum, 3) << "%)";
+		}
+		cout << "\n";
+	}
 	//
     std::cout << "\nOK!\n";
 }
