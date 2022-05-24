@@ -51,14 +51,14 @@ void setup_key(uchar card, const vector<uchar>& hist) {
 class Agent {
 public:
 	virtual string get_name() const = 0;
-	virtual int sel_action(uchar card, int n_actions, bool raised) = 0;
-	//virtual int sel_action(uchar card, bool raised, const vector<uchar>& hist_actions) = 0;
+	//virtual int sel_action(uchar card, int n_actions, bool raised) = 0;
+	virtual int sel_action(uchar card, const vector<uchar>& hist, bool raised) = 0;
 };
 //	ランダムエージェント、ただしチェック可能な状態でフォールドは行わない
 class RandomAgent : public Agent {
 public:
 	string get_name() const { return "RandomAgent"; }
-	int sel_action(uchar card, int n_actions, bool raised) {
+	int sel_action(uchar card, const vector<uchar>& hist, bool raised) {
 		if( !raised ) {		//	非レイズ状態
 			if( (g_mt() & 1) == 0 )
 				return ACT_RAISE;
@@ -76,7 +76,7 @@ public:
 // 常に強気
 class BullishAgent : public Agent {
 	string get_name() const { return "BullishAgent"; }
-	int sel_action(uchar card, int n_actions, bool raised) {
+	int sel_action(uchar card, const vector<uchar>& hist, bool raised) {
 		if( !raised ) {		//	非レイズ状態
 			return ACT_RAISE;
 		} else {			//	レイズされた状態
@@ -87,7 +87,7 @@ class BullishAgent : public Agent {
 // 常に弱気
 class BearishAgent : public Agent {
 	string get_name() const { return "BearishAgent"; }
-	int sel_action(uchar card, int n_actions, bool raised) {
+	int sel_action(uchar card, const vector<uchar>& hist, bool raised) {
 		if( !raised ) {		//	非レイズ状態
 			return ACT_CHECK;
 		} else {			//	レイズされた状態
@@ -99,9 +99,9 @@ class BearishAgent : public Agent {
 const int RAND_RANGE = 10000;
 class OptimalAgent : public Agent {
 	string get_name() const { return "OptimalAgent"; }
-	int sel_action(uchar card, int n_actions, bool raised) {
+	int sel_action(uchar card, const vector<uchar>& hist, bool raised) {
 		int rd = g_mt() % RAND_RANGE;
-		switch( n_actions ) {
+		switch( hist.size() ) {
 		case 0:		//	初手
 			switch( card ) {
 			case RANK_10:
@@ -197,10 +197,11 @@ public:
 class CFRAgent : public Agent {
 public:
 	string get_name() const { return "CFRAgent"; }
-	int sel_action(uchar card, int n_actions, bool raised) {
-		g_key[0] = "TJQKA"[card - RANK_10];
-		g_key[1] = '0' + n_actions;
-		g_key[2] = raised ? 'R' : ' ';
+	int sel_action(uchar card, const vector<uchar>& hist, bool raised) {
+		setup_key(card, hist);
+		//g_key[0] = "TJQKA"[card - RANK_10];
+		//g_key[1] = '0' + n_actions;
+		//g_key[2] = raised ? 'R' : ' ';
 		auto itr = g_map.find(g_key);
 		if( itr == g_map.end() ) {
 			g_map[g_key] = pair<int, int>{ 0, 0 };
@@ -358,7 +359,7 @@ public:
 		if( m_ut[ix] != -2 ) {		//	当該プレイヤーがレイズしていない場合
 			//if( !m_folded[ix] ) {
 			//	フォールドした人に手番が回ってくることはないので !m_folded[ix] チェックは不要
-			auto act = m_agents[ix]->sel_action(m_deck[ix], n_actions, raised);
+			auto act = m_agents[ix]->sel_action(m_deck[ix], m_hist_actions, raised);
 			cout << (n_actions+1) << ": " << action_string[act] << "\n";
 			if( act == ACT_FOLD ) {
 				m_folded[ix] = true;
