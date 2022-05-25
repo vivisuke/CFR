@@ -13,8 +13,8 @@ mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 //#define		DO_PRINT		1
 #define		N_PLAYERS		3
-#define		N_PLAYOUT		100
-//#define		N_PLAYOUT		(1000*1000)
+//#define		N_PLAYOUT		20
+#define		N_PLAYOUT		(1000*1000)
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -444,17 +444,20 @@ public:
 				undo_action(ix, act2);
 				//
 				setup_key(m_deck[ix], m_hist_actions);
-				//if( g_key == "A" )
-				//	cout << g_key << "\n";
 				if( g_map.find(g_key) == g_map.end() ) {
 					g_map[g_key] = pair<int, int>(0, 0);
 				}
 				auto &tbl = g_map[g_key];
-				if( act2 == ACT_RAISE || act2 == ACT_CALL ) {
+				if( act == ACT_RAISE || act == ACT_CALL ) {
 					tbl.first = max(0, tbl.first + m_CFut[ix] - m_utility[ix]);
 				} else {		//	CHECK or FOLD の場合
 					tbl.second = max(0, tbl.second + m_CFut[ix] - m_utility[ix]);
 				}
+				//if( g_key == "AcRF" ) {
+				//	cout << g_key << ": " << g_map[g_key].first << ", " << g_map[g_key].second << "\n";
+				//	cout << "act = " << action_string[act] << ", act2 = " << action_string[act2] << "\n";
+				//	cout << "ut = " << m_utility[ix] << ", CFut = " << m_CFut[ix] << "\n";
+				//}
 			}
 		} else { 		//	レイズで１周してきた場合
 			calc_utility(bCF);
