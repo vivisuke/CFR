@@ -13,8 +13,8 @@ mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
 
 //#define		DO_PRINT		1
 #define		N_PLAYERS		3
-//#define		N_PLAYOUT		100
-#define		N_PLAYOUT		(1000*1000)
+#define		N_PLAYOUT		100
+//#define		N_PLAYOUT		(1000*1000)
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -290,6 +290,7 @@ public:
 		m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[1] = new BearishAgent();		//	常に弱気プレイヤー
 		m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
+		//m_agents[2] = new CFRAgent();			//	CFRプレイヤー
 		//
 		m_bML[0] = m_agents[0]->get_name() == "CFRAgent";
 		m_bML[1] = m_agents[1]->get_name() == "CFRAgent";
@@ -332,7 +333,7 @@ public:
 		}
 		m_pot = N_PLAYERS * 1;
 #if	1
-		playout_sub(0, 0, /*N_PLAYERS,*/ /*N_PLAYERS,*/ false);
+		playout_sub(0, 0);
 #else
 		m_pot = N_PLAYERS;		//	ANTI:1 * N_PLAYERS
 		int n_actions = 0;
@@ -348,7 +349,7 @@ public:
 					m_folded[ix] = true;
 					n_active -= 1;
 				} else if( act == ACT_RAISE ) {
-					raised = true;
+					m_raised = true;
 					m_ut[ix] -= 1;			//	レイズ額は常に１
 					m_pot += 1;
 				} else if( act == ACT_CALL ) {
@@ -400,7 +401,7 @@ public:
 			m_pot -= 1;
 		}
 	}
-	void playout_sub(const int ix, int n_actions, /*int n_active,*/ /*int pot, bool raised,*/ bool bCF = false) {
+	void playout_sub(const int ix, int n_actions, bool bCF = false) {
 		if( m_ut[ix] != -2 ) {		//	当該プレイヤーがレイズしていない場合
 			//if( !m_folded[ix] ) {
 			//	フォールドした人に手番が回ってくることはないので !m_folded[ix] チェックは不要
@@ -424,8 +425,6 @@ public:
 			undo_action(ix, act);		//	状態をもとに戻す
 			//
 			if( !bCF && m_bML[ix] ) {
-				setup_key(m_deck[ix], m_hist_actions);
-				//cout << g_key << "\n";
 				int act2;		//	反事実行動
 				if( m_raised ) {
 					act2 = (ACT_FOLD + ACT_CALL) - act;
@@ -436,7 +435,7 @@ public:
 				if( !m_raised && nix == 0 ) {	//	チェックで１周した場合
 					calc_utility(bCF);
 				} else if( m_n_active > 1 ) {		//	まだ複数のプレイヤーがいる場合
-					m_hist_actions.push_back(act);
+					m_hist_actions.push_back(act2);
 					playout_sub(nix, n_actions + 1, /*m_n_active, m_pot, raised*/ true);
 					m_hist_actions.pop_back();
 				} else {	//	降りていないプレイヤーが一人だけになった場合
@@ -444,8 +443,10 @@ public:
 				}
 				undo_action(ix, act2);
 				//
-				auto itr = g_map.find(g_key);
-				if( itr == g_map.end() ) {
+				setup_key(m_deck[ix], m_hist_actions);
+				//if( g_key == "A" )
+				//	cout << g_key << "\n";
+				if( g_map.find(g_key) == g_map.end() ) {
 					g_map[g_key] = pair<int, int>(0, 0);
 				}
 				auto &tbl = g_map[g_key];
@@ -524,7 +525,7 @@ int main()
 	sort(lst.begin(), lst.end());
 	for (auto itr = lst.begin(); itr != lst.end(); ++itr) {
 		const pair<int, int> &tbl = g_map[*itr];
-		cout << (*itr) << ":\t" << tbl.first << ", " << tbl.second;
+		cout << (*itr) << ":\t" << sprint(tbl.first, 6) << ", " << sprint(tbl.second, 6);
 		if( tbl.first > 0 || tbl.second > 0 ) {
 			auto sum = tbl.first + tbl.second;
 			cout << "\t(" << sprint(tbl.first * 100 / sum, 3) << "%, " << sprint(tbl.second * 100 / sum, 3) << "%)";
