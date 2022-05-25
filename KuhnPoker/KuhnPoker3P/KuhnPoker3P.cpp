@@ -39,8 +39,8 @@ const char *action_string[N_ACTIONS] = {
 	"Folded", "Checked", "Called", "Raised",
 };
 
-string		g_key = "12345";						//	[0] for ランク、[1]... for actions（'C' for Call, 'c' for check）
-unordered_map<string, pair<int, int>> g_map;	//	<first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
+string		g_key = "12345";					//	[0] for ランク、[1]... for actions（'C' for Call, 'c' for check）
+unordered_map<string, pair<int, int>> g_map;	//	後悔値マップ <first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
 
 void setup_key(uchar card, const vector<uchar>& hist) {
 #if	1
@@ -279,10 +279,10 @@ class KuhnPoker3P {
 public:
 	KuhnPoker3P() {
 		//cout << "player1: Random, player2: Optimal\n";
-		//m_agents[0] = new CFRAgent();			//	CFRプレイヤー
+		m_agents[0] = new CFRAgent();			//	CFRプレイヤー
 		//m_agents[0] = new OptimalAgent();		//	最適戦略プレイヤー
 		//m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
-		m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
+		//m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[0] = new BearishAgent();		//	常に弱気プレイヤー
 		//m_agents[1] = new CFRAgent();			//	CFRプレイヤー
 		//m_agents[1] = new OptimalAgent();		//	最適戦略プレイヤー
@@ -319,8 +319,8 @@ public:
 		swap(m_agents[0], m_agents[1]);
 	}
 	void playout() {
-		bool raised = false;
-		int n_active = N_PLAYERS;		//	フォールドしていないプレイヤー数
+		m_raised = false;
+		m_n_active = N_PLAYERS;		//	フォールドしていないプレイヤー数
 		m_hist_actions.clear();
 		shuffle_deck();
 		#ifdef DO_PRINT
@@ -330,10 +330,11 @@ public:
 			m_folded[i] = false;
 			m_ut[i] = -1;			//	参加費
 		}
+		m_pot = N_PLAYERS * 1;
 #if	1
-		playout_sub(0, 0, N_PLAYERS, N_PLAYERS, false);
+		playout_sub(0, 0, /*N_PLAYERS,*/ /*N_PLAYERS,*/ false);
 #else
-		int pot = N_PLAYERS;		//	ANTI:1 * N_PLAYERS
+		m_pot = N_PLAYERS;		//	ANTI:1 * N_PLAYERS
 		int n_actions = 0;
 		int ix = 0;
 		vector<uchar> act_hist;
@@ -349,10 +350,10 @@ public:
 				} else if( act == ACT_RAISE ) {
 					raised = true;
 					m_ut[ix] -= 1;			//	レイズ額は常に１
-					pot += 1;
+					m_pot += 1;
 				} else if( act == ACT_CALL ) {
 					m_ut[ix] -= 1;			//	レイズ額は常に１
-					pot += 1;
+					m_pot += 1;
 				} else {	//	act == ACT_CHECK
 				}
 				act_hist.push_back(act);
@@ -362,7 +363,7 @@ public:
 			if( !raised && ix == 0 )	//	チェックで１周した場合
 				break;
 		}
-		calc_utility(pot);
+		calc_utility(false);
 #endif
 		//
 #if	DO_PRINT
@@ -373,71 +374,108 @@ public:
 		cout << "}\n\n";
 #endif
 	}
-	void playout_sub(const int ix, int n_actions, int n_active, int pot, bool raised) {
+	void do_action(int ix, int act) {
+		if( act == ACT_FOLD ) {
+			m_folded[ix] = true;
+			--m_n_active;
+		} else if( act == ACT_RAISE ) {
+			m_raised = true;
+			m_ut[ix] -= 1;			//	レイズ額は常に１
+			m_pot += 1;
+		} else if( act == ACT_CALL ) {
+			m_ut[ix] -= 1;			//	レイズ額は常に１
+			m_pot += 1;
+		}
+	}
+	void undo_action(int ix, int act) {
+		if( act == ACT_FOLD ) {
+			m_folded[ix] = false;
+			++m_n_active;
+		} else if( act == ACT_RAISE ) {
+			m_raised = false;
+			m_ut[ix] += 1;			//	レイズ額は常に１
+			m_pot -= 1;
+		} else if( act == ACT_CALL ) {
+			m_ut[ix] += 1;			//	レイズ額は常に１
+			m_pot -= 1;
+		}
+	}
+	void playout_sub(const int ix, int n_actions, /*int n_active,*/ /*int pot, bool raised,*/ bool bCF = false) {
 		if( m_ut[ix] != -2 ) {		//	当該プレイヤーがレイズしていない場合
 			//if( !m_folded[ix] ) {
 			//	フォールドした人に手番が回ってくることはないので !m_folded[ix] チェックは不要
-			auto act = m_agents[ix]->sel_action(m_deck[ix], m_hist_actions, raised);
+			auto act = m_agents[ix]->sel_action(m_deck[ix], m_hist_actions, m_raised);
 #if	DO_PRINT
 			cout << (n_actions+1) << ": " << action_string[act] << "\n";
 #endif
-			if( act == ACT_FOLD ) {
-				m_folded[ix] = true;
-				n_active -= 1;
-			} else if( act == ACT_RAISE ) {
-				raised = true;
-				m_ut[ix] -= 1;			//	レイズ額は常に１
-				pot += 1;
-			} else if( act == ACT_CALL ) {
-				m_ut[ix] -= 1;			//	レイズ額は常に１
-				pot += 1;
-			} else {	//	act == ACT_CHECK
-			}
+			do_action(ix, act);
 			//++n_actions;
 			//}
 			int nix = (ix + 1) % N_PLAYERS;		//	次のプレイヤー
-			if( !raised && nix == 0 ) {	//	チェックで１周した場合
-				calc_utility(pot);
-			} else if( n_active > 1 ) {		//	まだ複数のプレイヤーがいる場合
+			if( !m_raised && nix == 0 ) {	//	チェックで１周した場合
+				calc_utility(bCF);
+			} else if( m_n_active > 1 ) {		//	まだ複数のプレイヤーがいる場合
 				m_hist_actions.push_back(act);
-				playout_sub(nix, n_actions + 1, n_active, pot, raised);
+				playout_sub(nix, n_actions + 1 /*, m_n_active, m_pot, raised*/);
 				m_hist_actions.pop_back();
 			} else {	//	降りていないプレイヤーが一人だけになった場合
-				calc_utility(pot);
+				calc_utility(bCF);
 			}
+			undo_action(ix, act);		//	状態をもとに戻す
 			//
-			setup_key(m_deck[ix], m_hist_actions);
-			//cout << g_key << "\n";
-			auto itr = g_map.find(g_key);
-			if( itr == g_map.end() ) {
-				g_map[g_key] = pair<int, int>(0, 0);
-			}
-			//	状態をもとに戻す
-			if( act == ACT_FOLD ) {
-				m_folded[ix] = false;
-			} else if( act == ACT_RAISE || act == ACT_CALL ) {
-				pot -= 1;
-				m_ut[ix] += 1;			//	レイズ額は常に１
+			if( !bCF && m_bML[ix] ) {
+				setup_key(m_deck[ix], m_hist_actions);
+				//cout << g_key << "\n";
+				int act2;		//	反事実行動
+				if( m_raised ) {
+					act2 = (ACT_FOLD + ACT_CALL) - act;
+				} else {
+					act2 = (ACT_CHECK + ACT_RAISE) - act;
+				}
+				do_action(ix, act2);
+				if( !m_raised && nix == 0 ) {	//	チェックで１周した場合
+					calc_utility(bCF);
+				} else if( m_n_active > 1 ) {		//	まだ複数のプレイヤーがいる場合
+					m_hist_actions.push_back(act);
+					playout_sub(nix, n_actions + 1, /*m_n_active, m_pot, raised*/ true);
+					m_hist_actions.pop_back();
+				} else {	//	降りていないプレイヤーが一人だけになった場合
+					calc_utility(bCF);
+				}
+				undo_action(ix, act2);
+				//
+				auto itr = g_map.find(g_key);
+				if( itr == g_map.end() ) {
+					g_map[g_key] = pair<int, int>(0, 0);
+				}
+				auto &tbl = g_map[g_key];
+				if( act2 == ACT_RAISE || act2 == ACT_CALL ) {
+					tbl.first = max(0, tbl.first + m_CFut[ix] - m_utility[ix]);
+				} else {		//	CHECK or FOLD の場合
+					tbl.second = max(0, tbl.second + m_CFut[ix] - m_utility[ix]);
+				}
 			}
 		} else { 		//	レイズで１周してきた場合
-			calc_utility(pot);
+			calc_utility(bCF);
 		}
 	}
-	void calc_utility(int pot) {	//	pot チップを勝者に
-		
+	void calc_utility(bool bCF) {	//	pot チップを勝者に
+		int*ut = !bCF ? m_utility : m_CFut;
 		int mxcd = 0;
 		int mxi;
 		for (int i = 0; i != N_PLAYERS; ++i) {
-			m_utility[i] = m_ut[i];
+			ut[i] = m_ut[i];
 			if( !m_folded[i] && m_deck[i] > mxcd ) {
 				mxcd = m_deck[i];
 				mxi = i;
 			}
 		}
-		m_utility[mxi] += pot;
+		ut[mxi] += m_pot;
 	}
 private:
-	//bool	m_raised;
+	bool	m_raised;
+	int		m_n_active;
+	int		m_pot;
 	//int		m_n_active;			//	フォールドしていないプレイヤー数
 	//Agent	*m_agent1;
 	//Agent	*m_agent2;
@@ -445,6 +483,7 @@ private:
 	bool	m_bML[N_PLAYERS];			//	学習対応エージェント？
 	bool	m_folded[N_PLAYERS];
 	int		m_ut[N_PLAYERS];			//	作業用１プレイアウトでの各プレイヤーの効用（利得）
+	int		m_CFut[N_PLAYERS];			//	反事実値用１プレイアウトでの各プレイヤーの効用（利得）
 	
 	//	deck[0] for Player1, deck[1] for Player2
 	vector<uchar> m_deck;
