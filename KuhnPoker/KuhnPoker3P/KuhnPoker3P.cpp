@@ -8,8 +8,8 @@
 using namespace std;
 
 random_device g_rand;     	// 非決定的な乱数生成器
-mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
-//mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
+//mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
+mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 //#define		DO_PRINT		1
 #define		N_PLAYERS		3
