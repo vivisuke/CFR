@@ -13,7 +13,7 @@ mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 //#define		DO_PRINT		1
 #define		N_PLAYERS		3
-//#define		N_PLAYOUT		100
+//#define		N_PLAYOUT		1000
 #define		N_PLAYOUT		(1000*1000)
 
 typedef unsigned char uchar;
@@ -339,7 +339,7 @@ public:
 		}
 		m_pot = N_PLAYERS * 1;
 #if	1
-		playout_sub(0, 0);
+		playout_sub(0);
 #else
 		m_pot = N_PLAYERS;		//	ANTI:1 * N_PLAYERS
 		int n_actions = 0;
@@ -407,7 +407,7 @@ public:
 			m_pot -= 1;
 		}
 	}
-	void playout_sub(const int ix, /*int n_actions,*/ bool bCF = false) {
+	void playout_sub(const int ix, bool bCF = false) {
 		if( m_ut[ix] != -2 ) {		//	当該プレイヤーがレイズしていない場合
 			//if( !m_folded[ix] ) {
 			//	フォールドした人に手番が回ってくることはないので !m_folded[ix] チェックは不要
@@ -417,17 +417,15 @@ public:
 #endif
 			do_action(ix, act);
 			//setup_key(m_deck[ix], m_hist_actions);
-			//if( g_key == "AccR" ) {
+			//if (!bCF && m_bML[ix] && g_key == "AcRF" ) {
 			//	cout << "g_key = " << g_key << "\n";
-			//}
-			//++n_actions;
 			//}
 			int nix = (ix + 1) % N_PLAYERS;		//	次のプレイヤー
 			if( !m_raised && nix == 0 ) {	//	チェックで１周した場合
 				calc_utility(bCF);
 			} else if( m_n_active > 1 ) {		//	まだ複数のプレイヤーがいる場合
 				m_hist_actions.push_back(act);
-				playout_sub(nix /*, n_actions + 1*/ /*, m_n_active, m_pot, raised*/, bCF);
+				playout_sub(nix, bCF);
 				m_hist_actions.pop_back();
 			} else {	//	降りていないプレイヤーが一人だけになった場合
 				calc_utility(bCF);
@@ -443,13 +441,13 @@ public:
 				}
 				do_action(ix, act2);
 				if( !m_raised && nix == 0 ) {	//	チェックで１周した場合
-					calc_utility(bCF);
+					calc_utility(true);
 				} else if( m_n_active > 1 ) {		//	まだ複数のプレイヤーがいる場合
 					m_hist_actions.push_back(act2);
-					playout_sub(nix /*, n_actions + 1*/, /*m_n_active, m_pot, raised*/ true);
+					playout_sub(nix, true);
 					m_hist_actions.pop_back();
 				} else {	//	降りていないプレイヤーが一人だけになった場合
-					calc_utility(bCF);
+					calc_utility(true);
 				}
 				undo_action(ix, act2);
 				//
@@ -464,7 +462,7 @@ public:
 					tbl.second = max(0, tbl.second + m_CFut[ix] - m_utility[ix]);
 				}
 #if	0
-				if( g_key == "AccR" ) {
+				if( g_key == "AcRF" ) {
 					cout << "act = " << action_string[act] << ", act2 = " << action_string[act2] << "\n";
 					cout << "ut = " << m_utility[ix] << ", CFut = " << m_CFut[ix] << "\n";
 					cout << "map[" << g_key << "] = " << g_map[g_key].first << ", " << g_map[g_key].second << "\n";
@@ -478,9 +476,20 @@ public:
 						print_chist_actions();
 						do_action(ix, act);
 						m_hist_actions.push_back(act);
-						playout_sub(nix /*, n_actions + 1*/);
+						playout_sub(nix);
 						m_hist_actions.pop_back();
 						undo_action(ix, act);
+						cout << "\n";
+					}
+					if( act2 == ACT_FOLD && m_CFut[ix] > 0 ) {
+						cout << "???\n";
+						print_deck();
+						print_chist_actions();
+						do_action(ix, act2);
+						m_hist_actions.push_back(act2);
+						playout_sub(nix, true);
+						m_hist_actions.pop_back();
+						undo_action(ix, act2);
 						cout << "\n";
 					}
 				}
