@@ -8,13 +8,14 @@
 using namespace std;
 
 random_device g_rand;     	// 非決定的な乱数生成器
-//mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
-mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
+mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
+//mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 //#define		DO_PRINT		1
 #define		N_PLAYERS		3
 //#define		N_PLAYOUT		1000
-#define		N_PLAYOUT		(1000*1000)
+//#define		N_PLAYOUT		(1000*1000)
+#define		N_PLAYOUT		(10*1000*1000)
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -284,13 +285,14 @@ public:
 		//m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
 		//m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[0] = new BearishAgent();		//	常に弱気プレイヤー
-		//m_agents[1] = new CFRAgent();			//	CFRプレイヤー
+		m_agents[1] = new CFRAgent();			//	CFRプレイヤー
 		//m_agents[1] = new OptimalAgent();		//	最適戦略プレイヤー
 		//m_agents[1] = new BullishAgent();		//	常に強気プレイヤー
-		m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
+		//m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[1] = new BearishAgent();		//	常に弱気プレイヤー
-		m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
-		//m_agents[2] = new CFRAgent();			//	CFRプレイヤー
+		//m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
+		m_agents[2] = new CFRAgent();			//	CFRプレイヤー
+		//m_agents[2] = new BearishAgent();		//	常に弱気プレイヤー
 		//
 		m_bML[0] = m_agents[0]->get_name() == "CFRAgent";
 		m_bML[1] = m_agents[1]->get_name() == "CFRAgent";
@@ -300,11 +302,13 @@ public:
 		cout << "Player2: " << m_agents[1]->get_name() << "\n";
 		cout << "Player3: " << m_agents[2]->get_name() << "\n";
 		//
-		//m_deck.push_back(RANK_10);
+		m_deck.push_back(RANK_10);
 		m_deck.push_back(RANK_J);
 		m_deck.push_back(RANK_Q);
 		m_deck.push_back(RANK_K);
 		m_deck.push_back(RANK_A);
+		//
+		for (int i = 0; i != N_PLAYERS; ++i) m_sum_ut[i] = 0;
 	}
 public:
 	void shuffle_deck() {
@@ -380,6 +384,9 @@ public:
 		}
 		cout << "}\n\n";
 #endif
+		for (int i = 0; i != N_PLAYERS; ++i) {
+			m_sum_ut[i] += m_utility[i];
+		}
 	}
 	void do_action(int ix, int act) {
 		if( act == ACT_FOLD ) {
@@ -512,6 +519,13 @@ public:
 		}
 		ut[mxi] += m_pot;
 	}
+	void print_ave_ut() {
+		cout << "ave ut[] = {";
+		for (int i = 0; i != N_PLAYERS; ++i) {
+			cout << (double)m_sum_ut[i] / N_PLAYOUT << ", ";
+		}
+		cout << "}\n";
+	}
 private:
 	bool	m_raised;
 	int		m_n_active;
@@ -524,6 +538,7 @@ private:
 	bool	m_folded[N_PLAYERS];
 	int		m_ut[N_PLAYERS];			//	作業用１プレイアウトでの各プレイヤーの効用（利得）
 	int		m_CFut[N_PLAYERS];			//	反事実値用１プレイアウトでの各プレイヤーの効用（利得）
+	int		m_utility[N_PLAYERS];		//	１プレイアウトでの各プレイヤーの効用（利得）
 	
 	//	deck[0] for Player1, deck[1] for Player2
 	vector<uchar> m_deck;
@@ -532,7 +547,7 @@ private:
 	//string		m_key = "   ";
 	//unordered_map<string, int[2]> m_map;			//	(FOLD, CALL) or (CHECK, RAISE) 順
 public:
-	int		m_utility[N_PLAYERS];		//	１プレイアウトでの各プレイヤーの効用（利得）
+	int		m_sum_ut[N_PLAYERS];		//	全プレイアウトでの各プレイヤーの効用（利得）
 };
 //--------------------------------------------------------------------------------
 string sprint(int n, int wd) {
@@ -564,13 +579,20 @@ int main()
 	sort(lst.begin(), lst.end());
 	for (auto itr = lst.begin(); itr != lst.end(); ++itr) {
 		const pair<int, int> &tbl = g_map[*itr];
-		cout << (*itr) << ":\t" << sprint(tbl.first, 6) << ", " << sprint(tbl.second, 6);
+		//cout << (*itr) << ":\t" << sprint(tbl.first, 6) << ", " << sprint(tbl.second, 6);
+		cout << "\"" << (*itr) << "\": "; //<< sprint(tbl.first, 6) << ", " << sprint(tbl.second, 6);
 		if( tbl.first > 0 || tbl.second > 0 ) {
 			auto sum = tbl.first + tbl.second;
-			cout << "\t(" << sprint(tbl.first * 100 / sum, 3) << "%, " << sprint(tbl.second * 100 / sum, 3) << "%)";
+			//#cout << "\t(" << sprint(tbl.first * 100 / sum, 3) << "%, " << sprint(tbl.second * 100 / sum, 3) << "%)";
+			cout << (double)tbl.first / sum << ",";
+		} else {
+			cout << "0.5,";
 		}
 		cout << "\n";
 	}
+	cout << "\n";
+	//
+	kp.print_ave_ut();
 	//
     std::cout << "\nOK!\n";
 }

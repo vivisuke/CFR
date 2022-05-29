@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KuhnPoker5C", "KuhnPoker5C\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KuhnPoker3P", "KuhnPoker3P\KuhnPoker3P.vcxproj", "{EEF0098B-7C65-4F2B-B3C1-FA2396C54E91}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RiverOnly", "RiverOnly\RiverOnly.vcxproj", "{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{EEF0098B-7C65-4F2B-B3C1-FA2396C54E91}.Release|x64.Build.0 = Release|x64
 		{EEF0098B-7C65-4F2B-B3C1-FA2396C54E91}.Release|x86.ActiveCfg = Release|Win32
 		{EEF0098B-7C65-4F2B-B3C1-FA2396C54E91}.Release|x86.Build.0 = Release|Win32
+		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Debug|x64.ActiveCfg = Debug|x64
+		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Debug|x64.Build.0 = Debug|x64
+		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Debug|x86.ActiveCfg = Debug|Win32
+		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Debug|x86.Build.0 = Debug|Win32
+		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Release|x64.ActiveCfg = Release|x64
+		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Release|x64.Build.0 = Release|x64
+		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Release|x86.ActiveCfg = Release|Win32
+		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
