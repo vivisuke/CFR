@@ -17,6 +17,7 @@ typedef unsigned int uint;
 typedef unsigned short ushort;
 typedef unsigned char uchar;
 
+#define		DO_PRINT		1
 #define		N_PLAYERS		3
 #define		N_COMU_CARDS	5
 //#define		N_PLAYOUT		1000
@@ -44,7 +45,8 @@ const char *action_string[N_ACTIONS] = {
 string		g_key = "12345";					//	[0] for ランク、[1]... for actions（'C' for Call, 'c' for check）
 unordered_map<string, pair<int, int>> g_map;	//	後悔値マップ <first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
 
-void setup_key(uchar card, const vector<uchar>& hist) {
+void setup_key(Card card, const vector<uchar>& hist) {
+#if	0
 #if	1
 	char b[6];
 	b[0] = "TJQKA"[card - RANK_10];
@@ -63,18 +65,19 @@ void setup_key(uchar card, const vector<uchar>& hist) {
 	if( g_key.back() == '5' ) {
 		cout << g_key << " ???\n";
 	}
+#endif
 }
 class Agent {
 public:
 	virtual string get_name() const = 0;
 	//virtual int sel_action(uchar card, int n_actions, bool raised) = 0;
-	virtual int sel_action(uchar card, const vector<uchar>& hist, bool raised) = 0;
+	virtual int sel_action(Card card, const vector<uchar>& hist, bool raised) = 0;
 };
 //	ランダムエージェント、ただしチェック可能な状態でフォールドは行わない
 class RandomAgent : public Agent {
 public:
 	string get_name() const { return "RandomAgent"; }
-	int sel_action(uchar card, const vector<uchar>& hist, bool raised) {
+	int sel_action(Card card, const vector<uchar>& hist, bool raised) {
 		if( !raised ) {		//	非レイズ状態
 			if( (g_mt() & 1) == 0 )
 				return ACT_RAISE;
@@ -92,7 +95,7 @@ public:
 // 常に強気
 class BullishAgent : public Agent {
 	string get_name() const { return "BullishAgent"; }
-	int sel_action(uchar card, const vector<uchar>& hist, bool raised) {
+	int sel_action(Card card, const vector<uchar>& hist, bool raised) {
 		if( !raised ) {		//	非レイズ状態
 			return ACT_RAISE;
 		} else {			//	レイズされた状態
@@ -103,7 +106,7 @@ class BullishAgent : public Agent {
 // 常に弱気
 class BearishAgent : public Agent {
 	string get_name() const { return "BearishAgent"; }
-	int sel_action(uchar card, const vector<uchar>& hist, bool raised) {
+	int sel_action(Card card, const vector<uchar>& hist, bool raised) {
 		if( !raised ) {		//	非レイズ状態
 			return ACT_CHECK;
 		} else {			//	レイズされた状態
@@ -114,7 +117,8 @@ class BearishAgent : public Agent {
 class CFRAgent : public Agent {
 public:
 	string get_name() const { return "CFRAgent"; }
-	int sel_action(uchar card, const vector<uchar>& hist, bool raised) {
+	int sel_action(Card card, const vector<uchar>& hist, bool raised) {
+#if	0
 		setup_key(card, hist);
 		//g_key[0] = "TJQKA"[card - RANK_10];
 		//g_key[1] = '0' + n_actions;
@@ -170,14 +174,16 @@ public:
 				}
 			}
 		}
+#endif
+		return ACT_FOLD;		//	暫定コード
 	}
 public:
 	//string		m_key = "   ";
 	//unordered_map<string, int[2]> m_map;		//	(FOLD, CALL) or (CHECK, RAISE) 順
 };
 //----------------------------------------------------------------------
-vector<pair<Card, Card>>	g_players_cards;	//	各プレイヤー手札
-vector<Card>	g_comu_cards;					//	コミュニティカード
+//vector<pair<Card, Card>>	g_players_cards;	//	各プレイヤー手札
+//vector<Card>	g_comu_cards;					//	コミュニティカード
 
 class RiverOnlyPoker {
 public:
@@ -203,22 +209,25 @@ public:
 		cout << "Player2: " << m_agents[1]->get_name() << "\n";
 		cout << "Player3: " << m_agents[2]->get_name() << "\n";
 		//
+#if	0
 		m_deck.push_back(RANK_10);
 		m_deck.push_back(RANK_J);
 		m_deck.push_back(RANK_Q);
 		m_deck.push_back(RANK_K);
 		m_deck.push_back(RANK_A);
+#endif
 		//
 		for (int i = 0; i != N_PLAYERS; ++i) m_sum_ut[i] = 0;
 	}
 public:
 	void shuffle_deck() {
-		shuffle(m_deck.begin(), m_deck.end(), g_mt);
+		//shuffle(m_deck.begin(), m_deck.end(), g_mt);
+		m_deck.shuffle();
 	}
 	void print_deck() const {
-		for (int i = 0; i != m_deck.size(); ++i) {
-			cout << "TJQKA"[m_deck[i] - RANK_10] << " ";
-		}
+		//for (int i = 0; i != m_deck.size(); ++i) {
+		//	cout << "TJQKA"[m_deck[i] - RANK_10] << " ";
+		//}
 		cout << "\n";
 	}
 	void print_chist_actions() {
@@ -235,13 +244,35 @@ public:
 		m_n_active = N_PLAYERS;		//	フォールドしていないプレイヤー数
 		m_hist_actions.clear();
 		shuffle_deck();
-		#ifdef DO_PRINT
-			print_deck();
-		#endif
+#if DO_PRINT
+		cout << "\n";
+		for (int i = 0; i != N_COMU_CARDS; ++i) {
+			m_deck[N_PLAYERS*2 + i].print();
+			cout << " ";
+		}
+		cout << "\n";
+#endif
 		for (int i = 0; i != N_PLAYERS; ++i) {
 			m_folded[i] = false;
 			m_ut[i] = -1;			//	参加費
+#if DO_PRINT
+			m_deck[i*2].print();
+			cout << " ";
+			m_deck[i*2+1].print();
+			cout << " ";
+			//
+			vector<Card> v;
+			v.push_back(m_deck[i*2]);
+			v.push_back(m_deck[i*2+1]);
+			for (int k = 0; k != N_COMU_CARDS; ++k)
+				v.push_back(m_deck[N_PLAYERS*2 + k]);
+			auto h = checkHand(v);
+			cout << "hand = " << h << " " << handName[h] << "\n";
+#endif
 		}
+#if DO_PRINT
+		cout << "\n";
+#endif
 		m_pot = N_PLAYERS * 1;
 #if	1
 		playout_sub(0);
@@ -413,8 +444,8 @@ public:
 		int mxi;
 		for (int i = 0; i != N_PLAYERS; ++i) {
 			ut[i] = m_ut[i];
-			if( !m_folded[i] && m_deck[i] > mxcd ) {
-				mxcd = m_deck[i];
+			if( !m_folded[i] && m_deck[i].m_rank > mxcd ) {
+				mxcd = m_deck[i].m_rank;
 				mxi = i;
 			}
 		}
@@ -441,8 +472,11 @@ private:
 	int		m_CFut[N_PLAYERS];			//	反事実値用１プレイアウトでの各プレイヤーの効用（利得）
 	int		m_utility[N_PLAYERS];		//	１プレイアウトでの各プレイヤーの効用（利得）
 	
+	vector<pair<Card, Card>>	g_players_cards;	//	各プレイヤー手札
+	vector<Card>	g_comu_cards;					//	コミュニティカード
 	//	deck[0] for Player1, deck[1] for Player2
-	vector<uchar> m_deck;
+	Deck			m_deck;
+	//vector<uchar> m_deck;
 	vector<uchar> m_hist_actions;					//	実行アクション履歴
 	//unordered_map<string, int[N_ACTIONS]> m_map;	//	状態 → 反事実後悔テーブル
 	//string		m_key = "   ";
@@ -453,6 +487,10 @@ public:
 //----------------------------------------------------------------------
 int main()
 {
+	RiverOnlyPoker rop;
+	rop.playout();
+	
+#if	0
 	Deck dk;
 	dk.shuffle();
 	
@@ -478,6 +516,7 @@ int main()
 		auto h = checkHand(v);
 		cout << "hand = " << h << " " << handName[h] << "\n";
 	}
+#endif
 #if	0
 	vector<Card> v;
 	for (int i = 0; i != 7; ++i) {
