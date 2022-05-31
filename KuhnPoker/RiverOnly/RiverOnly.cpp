@@ -446,8 +446,8 @@ public:
 		for (int i = 0; i != N_PLAYERS; ++i) {
 			ut[i] = m_ut[i];
 			//	undone: 手役が同じ場合の勝者判定
-			if( !m_folded[i] && m_hand[i] > mxcd ) {
-				mxcd = m_hand[i];
+			if( !m_folded[i] && (int)m_handOdr[i] > mxcd ) {
+				mxcd = m_handOdr[i];
 				mxi = i;
 			}
 		}
