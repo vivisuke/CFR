@@ -260,14 +260,15 @@ public:
 			v.push_back(m_deck[i*2+1]);
 			for (int k = 0; k != N_COMU_CARDS; ++k)
 				v.push_back(m_deck[N_PLAYERS*2 + k]);
-			m_hand[i] = checkHand(v);
+			//m_hand[i] = checkHand(v);
+			m_hand[i] = checkHandBM(v, m_handOdr[i]);
 #if DO_PRINT
 			m_deck[i*2].print();
 			cout << " ";
 			m_deck[i*2+1].print();
 			cout << " ";
 			//
-			cout << "hand = " << m_hand[i] << " " << handName[m_hand[i]] << "\n";
+			cout << "hand = " << m_hand[i] << " " << handName[m_hand[i]] << "\t" << m_handOdr[i] << "\n";
 #endif
 		}
 #if DO_PRINT
@@ -473,6 +474,7 @@ private:
 	int		m_CFut[N_PLAYERS];			//	反事実値用１プレイアウトでの各プレイヤーの効用（利得）
 	int		m_utility[N_PLAYERS];		//	１プレイアウトでの各プレイヤーの効用（利得）
 	int		m_hand[N_PLAYERS];			//	各プレイヤーの手役
+	uint	m_handOdr[N_PLAYERS];		//	各プレイヤーの手役サブ情報
 	
 	vector<pair<Card, Card>>	g_players_cards;	//	各プレイヤー手札
 	vector<Card>	g_comu_cards;					//	コミュニティカード
