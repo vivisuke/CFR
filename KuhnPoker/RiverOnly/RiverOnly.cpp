@@ -255,19 +255,19 @@ public:
 		for (int i = 0; i != N_PLAYERS; ++i) {
 			m_folded[i] = false;
 			m_ut[i] = -1;			//	参加費
+			vector<Card> v;
+			v.push_back(m_deck[i*2]);
+			v.push_back(m_deck[i*2+1]);
+			for (int k = 0; k != N_COMU_CARDS; ++k)
+				v.push_back(m_deck[N_PLAYERS*2 + k]);
+			m_hand[i] = checkHand(v);
 #if DO_PRINT
 			m_deck[i*2].print();
 			cout << " ";
 			m_deck[i*2+1].print();
 			cout << " ";
 			//
-			vector<Card> v;
-			v.push_back(m_deck[i*2]);
-			v.push_back(m_deck[i*2+1]);
-			for (int k = 0; k != N_COMU_CARDS; ++k)
-				v.push_back(m_deck[N_PLAYERS*2 + k]);
-			auto h = checkHand(v);
-			cout << "hand = " << h << " " << handName[h] << "\n";
+			cout << "hand = " << m_hand[i] << " " << handName[m_hand[i]] << "\n";
 #endif
 		}
 #if DO_PRINT
@@ -440,12 +440,13 @@ public:
 	}
 	void calc_utility(bool bCF) {	//	pot チップを勝者に
 		int*ut = !bCF ? m_utility : m_CFut;
-		int mxcd = 0;
+		int mxcd = -1;
 		int mxi;
 		for (int i = 0; i != N_PLAYERS; ++i) {
 			ut[i] = m_ut[i];
-			if( !m_folded[i] && m_deck[i].m_rank > mxcd ) {
-				mxcd = m_deck[i].m_rank;
+			//	undone: 手役が同じ場合の勝者判定
+			if( !m_folded[i] && m_hand[i] > mxcd ) {
+				mxcd = m_hand[i];
 				mxi = i;
 			}
 		}
@@ -471,6 +472,7 @@ private:
 	int		m_ut[N_PLAYERS];			//	作業用１プレイアウトでの各プレイヤーの効用（利得）
 	int		m_CFut[N_PLAYERS];			//	反事実値用１プレイアウトでの各プレイヤーの効用（利得）
 	int		m_utility[N_PLAYERS];		//	１プレイアウトでの各プレイヤーの効用（利得）
+	int		m_hand[N_PLAYERS];			//	各プレイヤーの手役
 	
 	vector<pair<Card, Card>>	g_players_cards;	//	各プレイヤー手札
 	vector<Card>	g_comu_cards;					//	コミュニティカード
