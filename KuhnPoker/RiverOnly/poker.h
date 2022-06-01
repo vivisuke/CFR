@@ -25,6 +25,7 @@ int checkHandBM(const std::vector<Card> &v, uint &odr);		//	ビットマップ�
 void getHandBits(const std::vector<Card> &v, std::vector<bool> &o);		//	役を構成するカードを取得
 double calcWinSplitProb(Card c1, Card c2, const std::vector<Card> &comu);
 double calcWinSplitProb(Card c1, Card c2, const std::vector<Card> &comu, int np);
+double calcWinSplitProbRO(Card c1, Card c2, const std::vector<Card> &comu, int np);
 double calcHandStrength(Card c1, Card c2, const std::vector<Card> &comu, int np);
 void calcHandStrength(const std::vector<HoleCards> &hc, const std::vector<Card> &comu, std::vector<double> &p);
 double calcThreshold(int pot, int call);

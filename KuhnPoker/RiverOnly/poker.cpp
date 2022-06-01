@@ -2,9 +2,12 @@
 #include "Deck.h"
 #include <vector>
 #include <algorithm>
+#include <random>
 #include <assert.h>
 
+extern std::mt19937 g_mt;
 //----------------------------------------------------------------------
+std::vector<std::vector<Card>> g_vv;
 const char *handName[] = {
 	"highCard",
 	"onePair",
@@ -895,22 +898,23 @@ double calcWinSplitProb(Card c1, Card c2, const std::vector<Card> &comu, int np)
 	assert( comu.size() <= 5 );
 	const int N_LOOP = 1000;
 	//const int N_LOOP = 10000;
-	std::vector<std::vector<Card>> vv;
+	//std::vector<std::vector<Card>> vv;
+	g_vv.clear();
 	for (int i = 0; i < np; ++i) {
-		vv.push_back(std::vector<Card>(7));
+		g_vv.push_back(std::vector<Card>(7));
 	}
-	vv[0][0] = c1;
-	vv[0][1] = c2;
+	g_vv[0][0] = c1;
+	g_vv[0][1] = c2;
 	for (int k = 0; k < np; ++k) {
-		for (int i = 0; i < (int)comu.size(); ++i) {
-			vv[k][i+2] = comu[i];
+		for (int i = 0; i != (int)comu.size(); ++i) {
+			g_vv[k][i+2] = comu[i];
 		}
 	}
 	Deck deck;
 	//	take は O(N) の時間がかかるので、ループの前に処理を行っておく
 	deck.take(c1);
 	deck.take(c2);
-	for (int k = 0; k < (int)comu.size(); ++k)
+	for (int k = 0; k != (int)comu.size(); ++k)
 		deck.take(comu[k]);
 	int nWinSplit = 0;
 	const int NL = N_LOOP * 2 / np;
@@ -919,21 +923,21 @@ double calcWinSplitProb(Card c1, Card c2, const std::vector<Card> &comu, int np)
 		deck.setNDealt(2+comu.size());		//	ディール済み枚数
 		deck.shuffle();		//	undone: shuffle() は多分時間がかかるので、単にランダムに2枚取り出すようにする？
 		for (int j = (int)comu.size(); j < 5; ++j) {
-			vv[0][j+2] = deck.deal();
+			g_vv[0][j+2] = deck.deal();
 		}
 		uint odr0 = 0, odr = 0;
-		int h = checkHand(vv[0], odr0);
+		int h = checkHand(g_vv[0], odr0);
 		//std::cout << "\n";
 		//print(vv[0], odr0, handName[h]);
 		//std::vector<uint> odr;
 		for (int k = 1; k < np; ++k) {
-			vv[k][0] = deck.deal();
-			vv[k][1] = deck.deal();
+			g_vv[k][0] = deck.deal();
+			g_vv[k][1] = deck.deal();
 			for (int j = (int)comu.size(); j < 5; ++j) {
-				vv[k][j+2] = vv[0][j+2];
+				g_vv[k][j+2] = g_vv[0][j+2];
 			}
-			h = checkHand(vv[k], odr);
-			//print(vv[k], odr, handName[h]);
+			h = checkHand(g_vv[k], odr);
+			//print(g_vv[k], odr, handName[h]);
 			if( odr > odr0 )
 				break;
 		}
@@ -944,7 +948,68 @@ double calcWinSplitProb(Card c1, Card c2, const std::vector<Card> &comu, int np)
 	}
 	return (double)nWinSplit / NL;
 }
-std::vector<std::vector<Card>> g_vv;
+//	River 専用、ランダムハンドの相手 np - 1人に対する勝率（勝ち or 引き分け）を求める
+double calcWinSplitProbRO(Card c1, Card c2, const std::vector<Card> &comu, int np)
+{
+	assert( comu.size() == 5 );
+	const int N_LOOP = 1000;
+	//const int N_LOOP = 10000;
+	//std::vector<std::vector<Card>> vv;
+	g_vv.clear();
+	for (int i = 0; i < np; ++i) {
+		g_vv.push_back(std::vector<Card>(7));
+	}
+	g_vv[0][0] = c1;
+	g_vv[0][1] = c2;
+	for (int k = 0; k < np; ++k) {
+		for (int i = 0; i < (int)comu.size(); ++i) {
+			g_vv[k][i+2] = comu[i];
+		}
+	}
+	Deck deck;
+	//	take は O(N) の時間がかかるので、ループの前に処理を行っておく
+	deck.take(c1);
+	deck.take(c2);
+	for (int k = 0; k != (int)comu.size(); ++k)
+		deck.take(comu[k]);
+	const int N_DEALT = 7;					//	配布カード数
+	const int deck_size = 52 - N_DEALT;		//	未配布カード数
+	int nWinSplit = 0;
+	const int NL = N_LOOP * 2 / np;
+	//const int NL = 10;
+	for (int i = 0; i < NL; ++i) {
+		deck.setNDealt(2+comu.size());		//	ディール済み枚数
+		//deck.shuffle();		//	undone: shuffle() は多分時間がかかるので、単にランダムに2枚取り出すようにする？
+		//for (int j = (int)comu.size(); j < 5; ++j) {
+		//	g_vv[0][j+2] = deck.deal();
+		//}
+		uint odr0 = 0, odr = 0;
+		int h = checkHand(g_vv[0], odr0);
+		//std::cout << "\n";
+		//print(g_vv[0], odr0, handName[h]);
+		//std::vector<uint> odr;
+		for (int k = 1; k < np; ++k) {
+			int rix = g_mt() % deck_size;
+			int rix2 = g_mt() % deck_size;
+			while( rix == rix2 )
+				rix2 = g_mt() % deck_size;
+			g_vv[k][0] = deck[rix + N_DEALT];
+			g_vv[k][1] = deck[rix2 + N_DEALT];
+			for (int j = (int)comu.size(); j < 5; ++j) {
+				g_vv[k][j+2] = g_vv[0][j+2];
+			}
+			h = checkHand(g_vv[k], odr);
+			//print(g_vv[k], odr, handName[h]);
+			if( odr > odr0 )
+				break;
+		}
+		if( odr0 >= odr ) {
+			++nWinSplit;
+			//std::cout << "win\n";
+		}
+	}
+	return (double)nWinSplit / NL;
+}
 //	ランダムハンドの相手 np - 1人に対する勝率（引き分けの場合は、1/人数）を求める
 double calcHandStrength(Card c1, Card c2, const std::vector<Card> &comu, int np)
 {

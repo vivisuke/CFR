@@ -56,7 +56,7 @@
 0051 ◎ C 06/01 06/01 0.001│ToDo│RiverOnlyPoker：checkHandBM(v, odr) を使い手役計算、結果保存
 0052 ◎ C 06/01 06/01 0.001│ToDo│odr を用いた勝敗判定
 0053 ◎ C 06/01 06/02 0.001│ToDo│予め、手札・コミュカードでの勝率を計算
-0054 ● C 06/02            │ToDo│
+0054 ◎ C 06/02 06/02 0.001│ToDo│River 専用・deck.shuffle() を利用しない calcWinSplitProb() を実装
 0055 ● C 06/02            │ToDo│
 0056 ● C 06/02            │ToDo│
 0057 ● C 06/02            │ToDo│

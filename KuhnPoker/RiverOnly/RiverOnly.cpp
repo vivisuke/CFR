@@ -22,8 +22,8 @@ typedef unsigned char uchar;
 #define		N_PLAYERS		3
 #define		N_COMU_CARDS	5
 
-#define		N_PLAYOUT		10
-//#define		N_PLAYOUT		1000
+//#define		N_PLAYOUT		10
+#define		N_PLAYOUT		1000
 //#define		N_PLAYOUT		(1000*1000)
 //#define		N_PLAYOUT		(10*1000*1000)
 
@@ -195,17 +195,17 @@ class RiverOnlyPoker {
 public:
 	RiverOnlyPoker() {
 		//cout << "player1: Random, player2: Optimal\n";
-		m_agents[0] = new CFRAgent();			//	CFRプレイヤー
-		//m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
+		//m_agents[0] = new CFRAgent();			//	CFRプレイヤー
+		m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
 		//m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[0] = new BearishAgent();		//	常に弱気プレイヤー
 		//m_agents[1] = new CFRAgent();			//	CFRプレイヤー
 		//m_agents[1] = new BullishAgent();		//	常に強気プレイヤー
 		m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[1] = new BearishAgent();		//	常に弱気プレイヤー
-		//m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
+		m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[2] = new CFRAgent();			//	CFRプレイヤー
-		m_agents[2] = new BearishAgent();		//	常に弱気プレイヤー
+		//m_agents[2] = new BearishAgent();		//	常に弱気プレイヤー
 		//
 		m_bML[0] = m_agents[0]->get_name() == "CFRAgent";
 		m_bML[1] = m_agents[1]->get_name() == "CFRAgent";
@@ -272,7 +272,7 @@ public:
 				v.push_back(m_deck[N_PLAYERS*2 + k]);
 			//m_hand[i] = checkHand(v);
 			m_hand[i] = checkHandBM(v, m_handOdr[i]);
-			m_winProp[i] = calcWinSplitProb(m_deck[i*2], m_deck[i*2+1], m_comu_cards, N_PLAYERS);
+			m_winProp[i] = calcWinSplitProbRO(m_deck[i*2], m_deck[i*2+1], m_comu_cards, N_PLAYERS);
 			m_winRate[i] = round(m_winProp[i] * 10);
 #if DO_PRINT
 			m_deck[i*2].print();
