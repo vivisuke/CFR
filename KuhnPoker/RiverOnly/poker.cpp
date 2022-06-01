@@ -893,7 +893,8 @@ double calcWinSplitProb(Card c1, Card c2, const std::vector<Card> &comu)
 double calcWinSplitProb(Card c1, Card c2, const std::vector<Card> &comu, int np)
 {
 	assert( comu.size() <= 5 );
-	const int N_LOOP = 10000;
+	const int N_LOOP = 1000;
+	//const int N_LOOP = 10000;
 	std::vector<std::vector<Card>> vv;
 	for (int i = 0; i < np; ++i) {
 		vv.push_back(std::vector<Card>(7));
@@ -916,7 +917,7 @@ double calcWinSplitProb(Card c1, Card c2, const std::vector<Card> &comu, int np)
 	//const int NL = 10;
 	for (int i = 0; i < NL; ++i) {
 		deck.setNDealt(2+comu.size());		//	ディール済み枚数
-		deck.shuffle();
+		deck.shuffle();		//	undone: shuffle() は多分時間がかかるので、単にランダムに2枚取り出すようにする？
 		for (int j = (int)comu.size(); j < 5; ++j) {
 			vv[0][j+2] = deck.deal();
 		}
@@ -943,21 +944,24 @@ double calcWinSplitProb(Card c1, Card c2, const std::vector<Card> &comu, int np)
 	}
 	return (double)nWinSplit / NL;
 }
+std::vector<std::vector<Card>> g_vv;
 //	ランダムハンドの相手 np - 1人に対する勝率（引き分けの場合は、1/人数）を求める
 double calcHandStrength(Card c1, Card c2, const std::vector<Card> &comu, int np)
 {
 	///assert(np>1);
 	assert( comu.size() <= 5 );
+	//const int N_LOOP = 1000;
 	const int N_LOOP = 10000;
-	std::vector<std::vector<Card>> vv;
+	//std::vector<std::vector<Card>> vv;
+	g_vv.clear();
 	for (int i = 0; i < np; ++i) {
-		vv.push_back(std::vector<Card>(7));
+		g_vv.push_back(std::vector<Card>(7));
 	}
-	vv[0][0] = c1;
-	vv[0][1] = c2;
+	g_vv[0][0] = c1;
+	g_vv[0][1] = c2;
 	for (int k = 0; k < np; ++k) {
 		for (int i = 0; i < (int)comu.size(); ++i) {
-			vv[k][i+2] = comu[i];
+			g_vv[k][i+2] = comu[i];
 		}
 	}
 	Deck deck;
@@ -972,16 +976,16 @@ double calcHandStrength(Card c1, Card c2, const std::vector<Card> &comu, int np)
 		deck.setNDealt(2+comu.size());		//	ディール済み枚数
 		deck.shuffle();
 		for (int j = (int)comu.size(); j < 5; ++j)
-			vv[0][j+2] = deck.deal();
+			g_vv[0][j+2] = deck.deal();
 		uint odr0 = 0, odr = 0;
-		int h = checkHandBM(vv[0], odr0);
+		int h = checkHandBM(g_vv[0], odr0);
 		int nSplit = 1;		//	（自分も含めた）引き分け人数
 		for (int k = 1; k < np; ++k) {
-			vv[k][0] = deck.deal();
-			vv[k][1] = deck.deal();
+			g_vv[k][0] = deck.deal();
+			g_vv[k][1] = deck.deal();
 			for (int j = (int)comu.size(); j < 5; ++j)
-				vv[k][j+2] = vv[0][j+2];
-			h = checkHandBM(vv[k], odr);
+				g_vv[k][j+2] = g_vv[0][j+2];
+			h = checkHandBM(g_vv[k], odr);
 			if( odr > odr0 )
 				break;
 			if( odr == odr0 )		//	引き分けの場合

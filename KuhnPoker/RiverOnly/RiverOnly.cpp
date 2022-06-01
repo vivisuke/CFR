@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <random>
+#include <chrono>
 #include <iostream>
 
 #include "Deck.h"
@@ -17,12 +18,14 @@ typedef unsigned int uint;
 typedef unsigned short ushort;
 typedef unsigned char uchar;
 
-#define		DO_PRINT		1
+#define		DO_PRINT		0
 #define		N_PLAYERS		3
 #define		N_COMU_CARDS	5
+
+#define		N_PLAYOUT		10
 //#define		N_PLAYOUT		1000
 //#define		N_PLAYOUT		(1000*1000)
-#define		N_PLAYOUT		(10*1000*1000)
+//#define		N_PLAYOUT		(10*1000*1000)
 
 enum {
 	ACT_FOLD = 0,
@@ -45,11 +48,11 @@ const char *action_string[N_ACTIONS] = {
 string		g_key = "12345";					//	[0] for ランク、[1]... for actions（'C' for Call, 'c' for check）
 unordered_map<string, pair<int, int>> g_map;	//	後悔値マップ <first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
 
-void setup_key(Card card, const vector<uchar>& hist) {
-#if	0
+//	winRate: 1, 3, 5, 7, 9、1 for 10 +/- 10%
+void setup_key(int winRate, const vector<uchar>& hist) {
 #if	1
 	char b[6];
-	b[0] = "TJQKA"[card - RANK_10];
+	b[0] = "T J Q K A"[winRate - 1];
 	for (int i = 0; i != hist.size(); ++i) {
 		b[i+1] = "FcCR"[hist[i]];
 	}
@@ -62,22 +65,21 @@ void setup_key(Card card, const vector<uchar>& hist) {
 	}
 	g_key[hist.size()+1] = '\0';
 #endif
-	if( g_key.back() == '5' ) {
-		cout << g_key << " ???\n";
-	}
-#endif
+	//if( g_key.back() == '5' ) {
+	//	cout << g_key << " ???\n";
+	//}
 }
 class Agent {
 public:
 	virtual string get_name() const = 0;
 	//virtual int sel_action(uchar card, int n_actions, bool raised) = 0;
-	virtual int sel_action(Card card, const vector<uchar>& hist, bool raised) = 0;
+	virtual int sel_action(int winRate, const vector<uchar>& hist, bool raised) = 0;
 };
 //	ランダムエージェント、ただしチェック可能な状態でフォールドは行わない
 class RandomAgent : public Agent {
 public:
 	string get_name() const { return "RandomAgent"; }
-	int sel_action(Card card, const vector<uchar>& hist, bool raised) {
+	int sel_action(int winRate, const vector<uchar>& hist, bool raised) {
 		if( !raised ) {		//	非レイズ状態
 			if( (g_mt() & 1) == 0 )
 				return ACT_RAISE;
@@ -95,7 +97,7 @@ public:
 // 常に強気
 class BullishAgent : public Agent {
 	string get_name() const { return "BullishAgent"; }
-	int sel_action(Card card, const vector<uchar>& hist, bool raised) {
+	int sel_action(int winRate, const vector<uchar>& hist, bool raised) {
 		if( !raised ) {		//	非レイズ状態
 			return ACT_RAISE;
 		} else {			//	レイズされた状態
@@ -106,7 +108,7 @@ class BullishAgent : public Agent {
 // 常に弱気
 class BearishAgent : public Agent {
 	string get_name() const { return "BearishAgent"; }
-	int sel_action(Card card, const vector<uchar>& hist, bool raised) {
+	int sel_action(int winRate, const vector<uchar>& hist, bool raised) {
 		if( !raised ) {		//	非レイズ状態
 			return ACT_CHECK;
 		} else {			//	レイズされた状態
@@ -114,15 +116,19 @@ class BearishAgent : public Agent {
 		}
 	}
 };
+class HeuristicAgent : public Agent {
+public:
+	string get_name() const { return "HeuristicAgent"; }
+	int sel_action(int winRate, const vector<uchar>& hist, bool raised) {
+		return ACT_FOLD;
+	};
+};
 class CFRAgent : public Agent {
 public:
 	string get_name() const { return "CFRAgent"; }
-	int sel_action(Card card, const vector<uchar>& hist, bool raised) {
+	int sel_action(int winRate, const vector<uchar>& hist, bool raised) {
+		setup_key(winRate, hist);
 #if	0
-		setup_key(card, hist);
-		//g_key[0] = "TJQKA"[card - RANK_10];
-		//g_key[1] = '0' + n_actions;
-		//g_key[2] = raised ? 'R' : ' ';
 		auto itr = g_map.find(g_key);
 		if( itr == g_map.end() ) {
 			g_map[g_key] = pair<int, int>{ 0, 0 };
@@ -189,17 +195,17 @@ class RiverOnlyPoker {
 public:
 	RiverOnlyPoker() {
 		//cout << "player1: Random, player2: Optimal\n";
-		//m_agents[0] = new CFRAgent();			//	CFRプレイヤー
+		m_agents[0] = new CFRAgent();			//	CFRプレイヤー
 		//m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
-		m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
+		//m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[0] = new BearishAgent();		//	常に弱気プレイヤー
 		//m_agents[1] = new CFRAgent();			//	CFRプレイヤー
 		//m_agents[1] = new BullishAgent();		//	常に強気プレイヤー
 		m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[1] = new BearishAgent();		//	常に弱気プレイヤー
-		m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
+		//m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[2] = new CFRAgent();			//	CFRプレイヤー
-		//m_agents[2] = new BearishAgent();		//	常に弱気プレイヤー
+		m_agents[2] = new BearishAgent();		//	常に弱気プレイヤー
 		//
 		m_bML[0] = m_agents[0]->get_name() == "CFRAgent";
 		m_bML[1] = m_agents[1]->get_name() == "CFRAgent";
@@ -244,6 +250,10 @@ public:
 		m_n_active = N_PLAYERS;		//	フォールドしていないプレイヤー数
 		m_hist_actions.clear();
 		shuffle_deck();
+		m_comu_cards.resize(N_COMU_CARDS);
+		for (int i = 0; i != N_COMU_CARDS; ++i) {
+			m_comu_cards[i] = m_deck[N_PLAYERS*2 + i];
+		}
 #if DO_PRINT
 		cout << "\n";
 		for (int i = 0; i != N_COMU_CARDS; ++i) {
@@ -262,13 +272,17 @@ public:
 				v.push_back(m_deck[N_PLAYERS*2 + k]);
 			//m_hand[i] = checkHand(v);
 			m_hand[i] = checkHandBM(v, m_handOdr[i]);
+			m_winProp[i] = calcWinSplitProb(m_deck[i*2], m_deck[i*2+1], m_comu_cards, N_PLAYERS);
+			m_winRate[i] = round(m_winProp[i] * 10);
 #if DO_PRINT
 			m_deck[i*2].print();
 			cout << " ";
 			m_deck[i*2+1].print();
 			cout << " ";
 			//
-			cout << "hand = " << m_hand[i] << " " << handName[m_hand[i]] << "\t" << m_handOdr[i] << "\n";
+			cout << "hand = " << m_hand[i] << " " << handName[m_hand[i]] << "\t" << m_handOdr[i]
+					<< " " << m_winProp[i]
+					<< "\n";
 #endif
 		}
 #if DO_PRINT
@@ -351,7 +365,7 @@ public:
 		if( m_ut[ix] != -2 ) {		//	当該プレイヤーがレイズしていない場合
 			//if( !m_folded[ix] ) {
 			//	フォールドした人に手番が回ってくることはないので !m_folded[ix] チェックは不要
-			auto act = m_agents[ix]->sel_action(m_deck[ix], m_hist_actions, m_raised);
+			auto act = m_agents[ix]->sel_action(m_winRate[ix], m_hist_actions, m_raised);
 #if	DO_PRINT
 			cout << (m_hist_actions.size()+1) << ": " << action_string[act] << "\n";
 #endif
@@ -391,7 +405,7 @@ public:
 				}
 				undo_action(ix, act2);
 				//
-				setup_key(m_deck[ix], m_hist_actions);
+				setup_key(m_winRate[ix], m_hist_actions);
 				if( g_map.find(g_key) == g_map.end() ) {
 					g_map[g_key] = pair<int, int>(0, 0);
 				}
@@ -475,9 +489,11 @@ private:
 	int		m_utility[N_PLAYERS];		//	１プレイアウトでの各プレイヤーの効用（利得）
 	int		m_hand[N_PLAYERS];			//	各プレイヤーの手役
 	uint	m_handOdr[N_PLAYERS];		//	各プレイヤーの手役サブ情報
+	double	m_winProp[N_PLAYERS];		//	各プレイヤー期待勝率
+	int		m_winRate[N_PLAYERS];		//	各プレイヤー期待勝率状態圧縮、1 or 3 or 5 or 7 or 9
 	
-	vector<pair<Card, Card>>	g_players_cards;	//	各プレイヤー手札
-	vector<Card>	g_comu_cards;					//	コミュニティカード
+	//vector<pair<Card, Card>>	m_players_cards;	//	各プレイヤー手札
+	vector<Card>	m_comu_cards;					//	コミュニティカード
 	//	deck[0] for Player1, deck[1] for Player2
 	Deck			m_deck;
 	//vector<uchar> m_deck;
@@ -491,9 +507,25 @@ public:
 //----------------------------------------------------------------------
 int main()
 {
+	auto start = std::chrono::system_clock::now();      // 計測スタート時刻を保存
+	//
 	RiverOnlyPoker rop;
-	rop.playout();
-	
+	int sum = 0;
+	cout << "\nN_PLAYOUT = " << N_PLAYOUT << "\n\n";
+	for (int i = 0; i < N_PLAYOUT; ++i) {
+		#if DO_PRINT
+			cout << "#" << (i+1) << ": ";
+		#endif
+		rop.playout();
+	}
+	//
+	rop.print_ave_ut();
+	//
+	auto end = std::chrono::system_clock::now();       // 計測終了時刻を保存
+    auto dur = end - start;        // 要した時間を計算
+    auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+    // 要した時間をミリ秒（1/1000秒）に変換して表示
+    std::cout << msec << " milli sec \n";
 #if	0
 	Deck dk;
 	dk.shuffle();
