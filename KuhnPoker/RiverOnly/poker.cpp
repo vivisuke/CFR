@@ -6,8 +6,10 @@
 #include <assert.h>
 
 extern std::mt19937 g_mt;
-//----------------------------------------------------------------------
+
 std::vector<std::vector<Card>> g_vv;
+std::vector<Card> g_v;
+
 const char *handName[] = {
 	"highCard",
 	"onePair",
@@ -954,37 +956,38 @@ double calcWinSplitProbRO(Card c1, Card c2, const std::vector<Card> &comu, int n
 	assert( comu.size() == 5 );
 	const int N_LOOP = 1000;
 	//const int N_LOOP = 10000;
+	const int N_DEALT = 7;					//	配布カード数
+	const int deck_size = 52 - N_DEALT;		//	未配布カード数
 	//std::vector<std::vector<Card>> vv;
-	g_vv.clear();
-	for (int i = 0; i < np; ++i) {
-		g_vv.push_back(std::vector<Card>(7));
-	}
-	g_vv[0][0] = c1;
-	g_vv[0][1] = c2;
-	for (int k = 0; k < np; ++k) {
+	g_v.clear();
+	g_v.resize(N_DEALT);
+	//for (int i = 0; i < np; ++i) {
+	//	g_vv.push_back(std::vector<Card>(7));
+	//}
+	g_v[0] = c1;
+	g_v[1] = c2;
+	//for (int k = 0; k < np; ++k) {
 		for (int i = 0; i < (int)comu.size(); ++i) {
-			g_vv[k][i+2] = comu[i];
+			g_v[i+2] = comu[i];
 		}
-	}
+	//}
 	Deck deck;
 	//	take は O(N) の時間がかかるので、ループの前に処理を行っておく
 	deck.take(c1);
 	deck.take(c2);
 	for (int k = 0; k != (int)comu.size(); ++k)
 		deck.take(comu[k]);
-	const int N_DEALT = 7;					//	配布カード数
-	const int deck_size = 52 - N_DEALT;		//	未配布カード数
 	int nWinSplit = 0;
 	const int NL = N_LOOP * 2 / np;
 	//const int NL = 10;
 	for (int i = 0; i < NL; ++i) {
-		deck.setNDealt(2+comu.size());		//	ディール済み枚数
+		//deck.setNDealt(2+comu.size());		//	ディール済み枚数
 		//deck.shuffle();		//	undone: shuffle() は多分時間がかかるので、単にランダムに2枚取り出すようにする？
 		//for (int j = (int)comu.size(); j < 5; ++j) {
 		//	g_vv[0][j+2] = deck.deal();
 		//}
 		uint odr0 = 0, odr = 0;
-		int h = checkHand(g_vv[0], odr0);
+		/*int h =*/ checkHand(g_v, odr0);
 		//std::cout << "\n";
 		//print(g_vv[0], odr0, handName[h]);
 		//std::vector<uint> odr;
@@ -993,12 +996,12 @@ double calcWinSplitProbRO(Card c1, Card c2, const std::vector<Card> &comu, int n
 			int rix2 = g_mt() % deck_size;
 			while( rix == rix2 )
 				rix2 = g_mt() % deck_size;
-			g_vv[k][0] = deck[rix + N_DEALT];
-			g_vv[k][1] = deck[rix2 + N_DEALT];
-			for (int j = (int)comu.size(); j < 5; ++j) {
-				g_vv[k][j+2] = g_vv[0][j+2];
-			}
-			h = checkHand(g_vv[k], odr);
+			g_v[0] = deck[rix + N_DEALT];
+			g_v[1] = deck[rix2 + N_DEALT];
+			//for (int j = 0; j != 5; ++j) {
+			//	g_v[j+2] = comu[j];
+			//}
+			/*h =*/ checkHand(g_v, odr);
 			//print(g_vv[k], odr, handName[h]);
 			if( odr > odr0 )
 				break;

@@ -18,12 +18,12 @@ typedef unsigned int uint;
 typedef unsigned short ushort;
 typedef unsigned char uchar;
 
-#define		DO_PRINT		0
+#define		DO_PRINT		1
 #define		N_PLAYERS		3
 #define		N_COMU_CARDS	5
 
-//#define		N_PLAYOUT		10
-#define		N_PLAYOUT		1000
+#define		N_PLAYOUT		10
+//#define		N_PLAYOUT		1000
 //#define		N_PLAYOUT		(1000*1000)
 //#define		N_PLAYOUT		(10*1000*1000)
 
