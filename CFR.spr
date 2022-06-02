@@ -44,7 +44,7 @@
 0040 ◎ C 05/26 05/26 0.001│ToDo│playout_sub()：n_actions 引数は削除
 0041 ◎ C 05/26 05/26 0.001│問題│手札がAなのに、AcRF でフォールドしてしまう場合がある
 									原因：反事実 Fold しているのに、効用が +4 になっている
-0042 ● C 05/26            │ToDo│全プレイアウト終了後に utility 平均値を表示
+0042 ◎ C 05/26 06/02 0.001│ToDo│全プレイアウト終了後に utility 平均値を表示
 0043 ◎ C 05/30 05/30 0.001│ToDo│RiverOnly プロジェクト追加
 0044 ◎ C 05/31 05/31 0.001│ToDo│Deck.h cpp, poker.h cpp をプロジェクトに追加
 0045 ◎ C 05/31 05/31 0.001│ToDo│プレイヤー３人に２枚を配り、コミュニティカードも５枚配る
@@ -59,7 +59,7 @@
 0054 ◎ C 06/02 06/02 0.001│ToDo│River 専用・deck.shuffle() を利用しない calcWinSplitProbRO() を実装
 0055 ◎ C 06/02 06/02 0.001│ToDo│calcWinSplitProbRO()：カード情報を保持する g_vv を使用せず、たんなる vector<Card> g_v を用いる
 0056 ◎ C 06/02 06/02 0.001│問題│calcWinSplitProbRO() の結果が常に 0.45 程度になってしまう？
-0057 ● C 06/02            │ToDo│
+0057 ◎ C 06/02 06/02 0.001│ToDo│CFRAgent 実装
 0058 ● C 06/02            │ToDo│
 0059 ● C 06/02            │ToDo│
 0060 ● C 06/02            │ToDo│

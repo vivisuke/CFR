@@ -11,8 +11,8 @@
 using namespace std;
 
 random_device g_rand;     	// 非決定的な乱数生成器
-mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
-//mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
+//mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
+mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 typedef unsigned int uint;
 typedef unsigned short ushort;
@@ -22,7 +22,7 @@ typedef unsigned char uchar;
 #define		N_PLAYERS		3
 #define		N_COMU_CARDS	5
 
-#define		N_PLAYOUT		10
+#define		N_PLAYOUT		3
 //#define		N_PLAYOUT		1000
 //#define		N_PLAYOUT		(1000*1000)
 //#define		N_PLAYOUT		(10*1000*1000)
@@ -52,7 +52,7 @@ unordered_map<string, pair<int, int>> g_map;	//	後悔値マップ <first, secon
 void setup_key(int winRate, const vector<uchar>& hist) {
 #if	1
 	char b[6];
-	b[0] = "T J Q K A"[winRate - 1];
+	b[0] = "TJQKA"[winRate];
 	for (int i = 0; i != hist.size(); ++i) {
 		b[i+1] = "FcCR"[hist[i]];
 	}
@@ -128,7 +128,7 @@ public:
 	string get_name() const { return "CFRAgent"; }
 	int sel_action(int winRate, const vector<uchar>& hist, bool raised) {
 		setup_key(winRate, hist);
-#if	0
+#if	1
 		auto itr = g_map.find(g_key);
 		if( itr == g_map.end() ) {
 			g_map[g_key] = pair<int, int>{ 0, 0 };
@@ -181,7 +181,7 @@ public:
 			}
 		}
 #endif
-		return ACT_FOLD;		//	暫定コード
+		//return ACT_FOLD;		//	暫定コード
 	}
 public:
 	//string		m_key = "   ";
@@ -195,8 +195,8 @@ class RiverOnlyPoker {
 public:
 	RiverOnlyPoker() {
 		//cout << "player1: Random, player2: Optimal\n";
-		//m_agents[0] = new CFRAgent();			//	CFRプレイヤー
-		m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
+		m_agents[0] = new CFRAgent();			//	CFRプレイヤー
+		//m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
 		//m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[0] = new BearishAgent();		//	常に弱気プレイヤー
 		//m_agents[1] = new CFRAgent();			//	CFRプレイヤー
@@ -273,7 +273,7 @@ public:
 			//m_hand[i] = checkHand(v);
 			m_hand[i] = checkHandBM(v, m_handOdr[i]);
 			m_winProp[i] = calcWinSplitProbRO(m_deck[i*2], m_deck[i*2+1], m_comu_cards, N_PLAYERS);
-			m_winRate[i] = round(m_winProp[i] * 10);
+			m_winRate[i] = std::min((int)(m_winProp[i] * 5), 4);			//	[0, 4]
 #if DO_PRINT
 			m_deck[i*2].print();
 			cout << " ";
@@ -281,8 +281,9 @@ public:
 			cout << " ";
 			//
 			cout << "hand = " << m_hand[i] << " " << handName[m_hand[i]] << "\t" << m_handOdr[i]
-					<< " " << m_winProp[i]
-					<< "\n";
+					<< "\t" << m_winProp[i]
+				<< "\t" << m_winRate[i]
+				<< "\n";
 #endif
 		}
 #if DO_PRINT
@@ -518,6 +519,25 @@ int main()
 		#endif
 		rop.playout();
 	}
+	cout << "g_map.size() = " << g_map.size() << "\n\n";
+	vector<string> lst;
+	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr)
+		lst.push_back((*itr).first);
+	sort(lst.begin(), lst.end());
+	for (auto itr = lst.begin(); itr != lst.end(); ++itr) {
+		const pair<int, int> &tbl = g_map[*itr];
+		//cout << (*itr) << ":\t" << sprint(tbl.first, 6) << ", " << sprint(tbl.second, 6);
+		cout << "\"" << (*itr) << "\": "; //<< sprint(tbl.first, 6) << ", " << sprint(tbl.second, 6);
+		if( tbl.first > 0 || tbl.second > 0 ) {
+			auto sum = tbl.first + tbl.second;
+			//#cout << "\t(" << sprint(tbl.first * 100 / sum, 3) << "%, " << sprint(tbl.second * 100 / sum, 3) << "%)";
+			cout << (double)tbl.first / sum << ",";
+		} else {
+			cout << "0.5,";
+		}
+		cout << "\n";
+	}
+	cout << "\n";
 	//
 	rop.print_ave_ut();
 	//

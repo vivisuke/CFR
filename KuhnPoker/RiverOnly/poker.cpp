@@ -13,16 +13,16 @@ std::vector<std::vector<Card>> g_vv;
 std::vector<Card> g_v;
 
 const char *handName[] = {
-	"highCard",
-	"onePair",
-	"twoPair",
-	"threeOfAKind",
-	"straight",
-	"flush",
-	"fullHouse",
-	"fourOfAKind",
+	"highCard     ",
+	"onePair      ",
+	"twoPair      ",
+	"threeOfAKind ",
+	"straight     ",
+	"flush        ",
+	"fullHouse    ",
+	"fourOfAKind  ",
 	"straightFlush",
-	"RoyalFlush",
+	"RoyalFlush   ",
 };
 //	v のサイズは 7以下とする
 //	要素はソートされていないものとする
