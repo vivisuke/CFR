@@ -18,13 +18,13 @@ typedef unsigned int uint;
 typedef unsigned short ushort;
 typedef unsigned char uchar;
 
-#define		DO_PRINT		1
+#define		DO_PRINT		0
 #define		N_PLAYERS		3
 #define		N_COMU_CARDS	5
 
-#define		N_PLAYOUT		3
+//#define		N_PLAYOUT		3
 //#define		N_PLAYOUT		1000
-//#define		N_PLAYOUT		(1000*1000)
+#define		N_PLAYOUT		(1000*1000)
 //#define		N_PLAYOUT		(10*1000*1000)
 
 enum {
@@ -199,12 +199,12 @@ public:
 		//m_agents[0] = new BullishAgent();		//	常に強気プレイヤー
 		//m_agents[0] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[0] = new BearishAgent();		//	常に弱気プレイヤー
-		//m_agents[1] = new CFRAgent();			//	CFRプレイヤー
+		m_agents[1] = new CFRAgent();			//	CFRプレイヤー
 		//m_agents[1] = new BullishAgent();		//	常に強気プレイヤー
-		m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
+		//m_agents[1] = new RandomAgent();		//	ランダムプレイヤー
 		//m_agents[1] = new BearishAgent();		//	常に弱気プレイヤー
-		m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
-		//m_agents[2] = new CFRAgent();			//	CFRプレイヤー
+		//m_agents[2] = new RandomAgent();		//	ランダムプレイヤー
+		m_agents[2] = new CFRAgent();			//	CFRプレイヤー
 		//m_agents[2] = new BearishAgent();		//	常に弱気プレイヤー
 		//
 		m_bML[0] = m_agents[0]->get_name() == "CFRAgent";
@@ -368,7 +368,8 @@ public:
 			//	フォールドした人に手番が回ってくることはないので !m_folded[ix] チェックは不要
 			auto act = m_agents[ix]->sel_action(m_winRate[ix], m_hist_actions, m_raised);
 #if	DO_PRINT
-			cout << (m_hist_actions.size()+1) << ": " << action_string[act] << "\n";
+			if( !bCF )
+				cout << (m_hist_actions.size()+1) << ": " << action_string[act] << "\n";
 #endif
 			do_action(ix, act);
 			//setup_key(m_deck[ix], m_hist_actions);
@@ -588,3 +589,18 @@ int main()
 	
     std::cout << "\nOK.\n";
 }
+
+/*
+"A": 0.971014, "AR": 0.0078125, "ARC": 0.00819672, "ARF": 0, "Ac": 0.0873016, "AcR": 0,
+"AcRC": 0, "AcRF": 0, "Acc": 0, "AccR": 0, "AccRC": 0.025641, "AccRF": 0,
+"K": 0.379691, "KR": 0, "KRC": 0.0903955, "KRF": 0, "Kc": 0.474006, "KcR": 0,
+"KcRC": 0, "KcRF": 0.00606061, "Kcc": 0, "KccR": 0.010989, "KccRC": 0, "KccRF": 0.00925926,
+"Q": 0.849412, "QR": 0.352577, "QRC": 1, "QRF": 0.0592885, "Qc": 0.330869, "QcR": 0.022293,
+"QcRC": 0.971014, "QcRF": 0, "Qcc": 0.251121, "QccR": 0.0144092, "QccRC": 0.886364, "QccRF": 0.0454545,
+"J": 0.965726, "JR": 0.937209, "JRC": 1, "JRF": 0.144981, "Jc": 1, "JcR": 0.991935,
+"JcRC": 1, "JcRF": 0.256293, "Jcc": 1, "JccR": 0.375912, "JccRC": 1, "JccRF": 0.0116959,
+"T": 0.978845, "TR": 1, "TRC": 1, "TRF": 1, "Tc": 0.822243, "TcR": 1,
+"TcRC": 1, "TcRF": 1, "Tcc": 0.678679, "TccR": 0.992424, "TccRC": 1, "TccRF": 0.994318,
+*/
+
+
