@@ -5,6 +5,8 @@
 #include <random>
 #include <assert.h>
 
+using namespace std;
+
 extern std::mt19937 g_mt;
 
 std::vector<std::vector<Card>> g_vv;
@@ -977,6 +979,13 @@ double calcWinSplitProbRO(Card c1, Card c2, const std::vector<Card> &comu, int n
 	deck.take(c2);
 	for (int k = 0; k != (int)comu.size(); ++k)
 		deck.take(comu[k]);
+	uint odr0 = 0, odr = 0;
+	int h = checkHand(g_v, odr0);
+	//for (int i = 0; i != g_v.size(); ++i) {
+	//	g_v[i].print();
+	//	cout << " ";
+	//}
+	//cout << "hand = " << handName[h] << " odr0 = " << odr0 << "\n";
 	int nWinSplit = 0;
 	const int NL = N_LOOP * 2 / np;
 	//const int NL = 10;
@@ -986,8 +995,6 @@ double calcWinSplitProbRO(Card c1, Card c2, const std::vector<Card> &comu, int n
 		//for (int j = (int)comu.size(); j < 5; ++j) {
 		//	g_vv[0][j+2] = deck.deal();
 		//}
-		uint odr0 = 0, odr = 0;
-		/*int h =*/ checkHand(g_v, odr0);
 		//std::cout << "\n";
 		//print(g_vv[0], odr0, handName[h]);
 		//std::vector<uint> odr;
@@ -1001,14 +1008,21 @@ double calcWinSplitProbRO(Card c1, Card c2, const std::vector<Card> &comu, int n
 			//for (int j = 0; j != 5; ++j) {
 			//	g_v[j+2] = comu[j];
 			//}
-			/*h =*/ checkHand(g_v, odr);
+			h = checkHand(g_v, odr);
+			//for (int i = 0; i != g_v.size(); ++i) {
+			//	g_v[i].print();
+			//	cout << " ";
+			//}
+			//cout << "hand = " << handName[h] << " odr = " << odr << "\n";
 			//print(g_vv[k], odr, handName[h]);
 			if( odr > odr0 )
 				break;
 		}
 		if( odr0 >= odr ) {
 			++nWinSplit;
-			//std::cout << "win\n";
+			//std::cout << "won\n";
+		} else {
+			//std::cout << "lose\n";
 		}
 	}
 	return (double)nWinSplit / NL;

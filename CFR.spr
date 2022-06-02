@@ -58,7 +58,7 @@
 0053 ◎ C 06/01 06/02 0.001│ToDo│予め、手札・コミュカードでの勝率を計算
 0054 ◎ C 06/02 06/02 0.001│ToDo│River 専用・deck.shuffle() を利用しない calcWinSplitProbRO() を実装
 0055 ◎ C 06/02 06/02 0.001│ToDo│calcWinSplitProbRO()：カード情報を保持する g_vv を使用せず、たんなる vector<Card> g_v を用いる
-0056 ● C 06/02            │ToDo│
+0056 ◎ C 06/02 06/02 0.001│問題│calcWinSplitProbRO() の結果が常に 0.45 程度になってしまう？
 0057 ● C 06/02            │ToDo│
 0058 ● C 06/02            │ToDo│
 0059 ● C 06/02            │ToDo│

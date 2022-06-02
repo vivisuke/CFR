@@ -77,7 +77,7 @@ bool Deck::take(Card c)
 	for (int i = m_nDealt; i < Card::N_CARD; ++i) {
 		if( m_card[i] == c ) {
 			m_card[i] = m_card[m_nDealt];
-			m_card[m_nDealt] = c;
+			m_card[m_nDealt] = c;			//	取り出すカードを配布済み最後に移動
 			++m_nDealt;
 			return true;
 		}
