@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KuhnPoker3P", "KuhnPoker3P\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RiverOnly", "RiverOnly\RiverOnly.vcxproj", "{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Janken", "Janken\Janken.vcxproj", "{95556207-615D-4298-B7D5-7E908F836CA2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Release|x64.Build.0 = Release|x64
 		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Release|x86.ActiveCfg = Release|Win32
 		{1CA26B6F-6ABC-4ACD-99AC-99056DE1F7DF}.Release|x86.Build.0 = Release|Win32
+		{95556207-615D-4298-B7D5-7E908F836CA2}.Debug|x64.ActiveCfg = Debug|x64
+		{95556207-615D-4298-B7D5-7E908F836CA2}.Debug|x64.Build.0 = Debug|x64
+		{95556207-615D-4298-B7D5-7E908F836CA2}.Debug|x86.ActiveCfg = Debug|Win32
+		{95556207-615D-4298-B7D5-7E908F836CA2}.Debug|x86.Build.0 = Debug|Win32
+		{95556207-615D-4298-B7D5-7E908F836CA2}.Release|x64.ActiveCfg = Release|x64
+		{95556207-615D-4298-B7D5-7E908F836CA2}.Release|x64.Build.0 = Release|x64
+		{95556207-615D-4298-B7D5-7E908F836CA2}.Release|x86.ActiveCfg = Release|Win32
+		{95556207-615D-4298-B7D5-7E908F836CA2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
