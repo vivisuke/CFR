@@ -9,11 +9,11 @@ mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
 //mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 enum {			//	アクション：グー・チョキ・パー
+	SG_DIST = 5,		//	スタートからゴールまでの距離
 	GOO = 0,
 	CHOKI,
 	PAR,
 	N_ACTIONS,
-	SG_DIST = 9,		//	スタートからゴールまでの距離
 	GOO_GAIN = 1,		//	グーで勝った場合の移動距離
 	CHOKI_GAIN = 2,		//	チョキで勝った場合の移動距離
 	PAR_GAIN = 2,		//	パーで勝った場合の移動距離
@@ -49,12 +49,12 @@ bool random_play_out(int p1_dist = SG_DIST, int p2_dist = SG_DIST) {
 	//	cout << "p1 won.\n";
 	//else
 	//	cout << "p2 won.\n";
-	return p1_dist < 0;			//	p1 勝利
+	return p1_dist <= 0;			//	p1 勝利
 }
-void init_win_count() {
+void init_win_count(bool b50 = true) {		//	b50: p1 == p2 を 50% に設定
 	for(int i = 0; i != SG_DIST; ++i) {
 		for(int k = 0; k != SG_DIST; ++k) {
-			if( i == k )
+			if( b50 && i == k )
 				g_win_count[i][k] = N_PLAYOUT / 2;
 			else
 				g_win_count[i][k] = 0;
@@ -87,6 +87,21 @@ void print_win_count() {
 	cout << "\n";
 }
 void calc_win_count_random() {		//	各距離ごとのP1勝利回数計算、ランダム vs ランダムプレイヤー
+#if 1
+	init_win_count(false);
+	for(int p1 = 1; p1 <= SG_DIST; ++p1) {
+		for(int p2 = 1; p2 <= p1; ++p2) {
+			int wcnt = 0;
+			for(int i = 0; i != N_PLAYOUT; ++i) {
+				if( random_play_out(p1, p2) )
+					++wcnt;
+			}
+			g_win_count[p1-1][p2-1] = wcnt;
+			if( p1 != p2 )
+				g_win_count[p2-1][p1-1] = N_PLAYOUT - wcnt;
+		}
+	}
+#else
 	init_win_count();
 	for(int p1 = 1; p1 != SG_DIST; ++p1) {
 		for(int p2 = 0; p2 != p1; ++p2) {
@@ -99,6 +114,7 @@ void calc_win_count_random() {		//	各距離ごとのP1勝利回数計算、ラ�
 			g_win_count[p2][p1] = N_PLAYOUT - wcnt;
 		}
 	}
+#endif
 	print_win_count();
 }
 
