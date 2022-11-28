@@ -67,8 +67,8 @@
 0062 ● C 11/29            │ToDo│calc_win_count_random_DP() 実装
 0063 ◎ C 11/29 11/29 0.001│ToDo│print_win_count()：右方向をP1に変更
 0064 ◎ C 11/29 11/29 0.001│ToDo│calc_win_count_random()：処理時間計測・表示
-0065 ● C 11/29            │ToDo│
-0066 ● C 11/29            │ToDo│
+0065 ◎ C 11/29 11/29 0.001│ToDo│print_win_count()：四捨五入して小数点以下１桁表示
+0066 ◎ C 11/29 11/29 0.001│ToDo│print_win_count()：10%未満の場合も小数点以下１桁まで表示
 0067 ● C 11/29            │ToDo│
 0068 ● C 11/29            │ToDo│
 0069 ● C 11/29            │ToDo│
