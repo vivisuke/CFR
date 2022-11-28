@@ -66,7 +66,7 @@
 0061 ◎ C 11/29 11/29 0.001│問題│勝率計算が不正
 0062 ● C 11/29            │ToDo│calc_win_count_random_DP() 実装
 0063 ◎ C 11/29 11/29 0.001│ToDo│print_win_count()：右方向をP1に変更
-0064 ● C 11/29            │ToDo│
+0064 ◎ C 11/29 11/29 0.001│ToDo│calc_win_count_random()：処理時間計測・表示
 0065 ● C 11/29            │ToDo│
 0066 ● C 11/29            │ToDo│
 0067 ● C 11/29            │ToDo│

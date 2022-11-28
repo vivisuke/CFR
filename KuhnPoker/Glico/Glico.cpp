@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <string>
 #include <random>
+#include <chrono>
 
 using namespace std;
 
@@ -101,9 +102,11 @@ void print_win_count() {
 		}
 		cout << "\n";
 	}
-	cout << "\n";
+	cout << "↓P2\n\n";
+	//cout << "\n";
 }
 void calc_win_count_random() {		//	各距離ごとのP1勝利回数計算、ランダム vs ランダムプレイヤー
+	auto start = std::chrono::system_clock::now();      // 計測スタート時刻
 #if 1
 	init_win_count(false);
 	for(int p1 = 1; p1 <= SG_DIST; ++p1) {
@@ -132,7 +135,11 @@ void calc_win_count_random() {		//	各距離ごとのP1勝利回数計算、ラ�
 		}
 	}
 #endif
-	print_win_count();
+	auto end = std::chrono::system_clock::now();       // 計測終了時刻を保存
+    auto dur = end - start;        // 要した時間を計算
+    auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+    std::cout << "calc_win_count_random(): " << msec << " milli sec \n\n";
+    print_win_count();
 }
 void calc_win_count_random_DP() {		//	各距離ごとのP1勝利回数計算、ランダム vs ランダムプレイヤー
 	init_win_count(false);
