@@ -263,7 +263,7 @@ public:
 	//void swap_agents() {
 	//	swap(m_agents[0], m_agents[1]);
 	//}
-	int playout() {
+	int playout() {		//	CFR による機械学習
 		//if( g_n_playout == 103 ) {
 		//	cout << "g_n_playout == 103\n";
 		//	print_deck();
@@ -351,15 +351,15 @@ public:
 		return ut;
 	}
 private:
-	bool	m_raised;
+	bool	m_raised;			//	レイズ済み？
 	//Agent	*m_agent1;
 	//Agent	*m_agent2;
-	Agent	*m_agents[2];
+	Agent	*m_agents[2];		//	プレイヤー１，２用エージェント
 	bool	m_bML[2];			//	学習対応？
 	
 	//	deck[0] for Player1, deck[1] for Player2
-	vector<uchar> m_deck;
-	vector<uchar> m_hist_actions;					//	実行アクション履歴
+	vector<uchar> m_deck;				//	デッキ
+	vector<uchar> m_hist_actions;		//	実行アクション履歴
 //public:
 	//vector<int>	m_cnt_card;
 };

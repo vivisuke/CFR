@@ -24,7 +24,7 @@ typedef unsigned char uchar;
 
 //#define		N_PLAYOUT		3
 //#define		N_PLAYOUT		1000
-#define		N_PLAYOUT		(1000*1000)
+#define		N_PLAYOUT		(100*1000)
 //#define		N_PLAYOUT		(10*1000*1000)
 
 enum {
@@ -477,13 +477,10 @@ public:
 		cout << "}\n";
 	}
 private:
-	bool	m_raised;
-	int		m_n_active;
-	int		m_pot;
-	//int		m_n_active;			//	フォールドしていないプレイヤー数
-	//Agent	*m_agent1;
-	//Agent	*m_agent2;
-	Agent	*m_agents[N_PLAYERS];
+	bool	m_raised;				//	レイズ済みか？
+	int		m_n_active;				//	フォールドしていないプレイヤー数
+	int		m_pot;					//	ポットにあるチップ数
+	Agent	*m_agents[N_PLAYERS];		//	エージェントオブジェクトへのポインタ
 	bool	m_bML[N_PLAYERS];			//	学習対応エージェント？
 	bool	m_folded[N_PLAYERS];
 	int		m_ut[N_PLAYERS];			//	作業用１プレイアウトでの各プレイヤーの効用（利得）

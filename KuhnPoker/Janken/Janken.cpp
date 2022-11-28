@@ -2,7 +2,7 @@
 #include <string>
 #include <random>
 
-#define		NO_STATE		1
+#define		NO_STATE		0
 
 using namespace std;
 
@@ -122,7 +122,7 @@ int main()
 #endif
 	cout << "enemy: ";
 	print_sum_regrets(sum_enemy_regrets, N_ACTIONS);
-	do_train(20);
+	do_train(30);
 	cout << "AI: ";
 	print_sum_regrets(sum_AI_regrets, sizeof(sum_AI_regrets)/sizeof(sum_AI_regrets[0]));
 	std::cout << "\nOK.\n";
