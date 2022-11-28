@@ -51,6 +51,24 @@ bool random_play_out(int p1_dist = SG_DIST, int p2_dist = SG_DIST) {
 	//	cout << "p2 won.\n";
 	return p1_dist <= 0;			//	p1 勝利
 }
+//	最初の移動だけ行い、その後は g_win_count[][] を参照して勝ち負けを決める
+bool random_play_out_DP(int p1_dist = SG_DIST, int p2_dist = SG_DIST) {
+	int g = 0;
+	while( g == 0 ) {
+		int a1 = g_mt() % N_ACTIONS;
+		int a2 = g_mt() % N_ACTIONS;
+		//cout << "GCP"[a1] << ", " << "GCP"[a2] << "\n";
+		g = g_gain[a1][a2];
+	}
+	if( g > 0 ) {			//	P1が勝利
+		if( (p1_dist -= g) <= 0 )
+			return true;
+	} else if( g < 0 ) {	//	P2が勝利
+		if( (p2_dist += g) <= 0 )
+			return false;
+	}
+	return true;
+}
 void init_win_count(bool b50 = true) {		//	b50: p1 == p2 を 50% に設定
 	for(int i = 0; i != SG_DIST; ++i) {
 		for(int k = 0; k != SG_DIST; ++k) {
@@ -72,15 +90,14 @@ string to_string4(double x) {
 }
 void print_win_count() {
 	cout << "   ";
-	for(int k = 0; k != SG_DIST; ++k) {
-		cout << (k+1) << ":     ";
+	for(int p1 = 1; p1 <= SG_DIST; ++p1) {
+		cout << p1 << ":     ";
 	}
-	cout << "\n";
-	for(int i = 0; i != SG_DIST; ++i) {
-		cout << (i+1) << ": ";
-		for(int k = 0; k != SG_DIST; ++k) {
-			//cout << ((double)g_win_count[i][k] / N_PLAYOUT)*100 << "%,\t";
-			cout << to_string4(((double)g_win_count[i][k] / N_PLAYOUT)*100) << "%, ";
+	cout << " → P1\n";
+	for(int p2 = 1; p2 <= SG_DIST; ++p2) {
+		cout << p2 << ": ";
+		for(int p1 = 1; p1 <= SG_DIST; ++p1) {
+			cout << to_string4(((double)g_win_count[p1-1][p2-1] / N_PLAYOUT)*100) << "%, ";
 		}
 		cout << "\n";
 	}
@@ -115,6 +132,23 @@ void calc_win_count_random() {		//	各距離ごとのP1勝利回数計算、ラ�
 		}
 	}
 #endif
+	print_win_count();
+}
+void calc_win_count_random_DP() {		//	各距離ごとのP1勝利回数計算、ランダム vs ランダムプレイヤー
+	init_win_count(false);
+	for(int p1 = 1; p1 <= SG_DIST; ++p1) {
+		for(int p2 = 1; p2 <= p1; ++p2) {
+			int wcnt = 0;
+			for(int i = 0; i != N_PLAYOUT; ++i) {
+				if( random_play_out_DP(p1, p2) )
+					++wcnt;
+			}
+			g_win_count[p1-1][p2-1] = wcnt;
+			if( p1 != p2 )
+				g_win_count[p2-1][p1-1] = N_PLAYOUT - wcnt;
+		}
+	}
+
 	print_win_count();
 }
 
