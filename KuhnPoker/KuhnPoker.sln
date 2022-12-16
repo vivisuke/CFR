@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Janken", "Janken\Janken.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Glico", "Glico\Glico.vcxproj", "{61428C70-99A5-4C7E-B768-10DB7B86A8E4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DPCFR_KuhnPoker", "DPCFR_KuhnPoker\DPCFR_KuhnPoker.vcxproj", "{32A8F57B-851B-47F9-A402-C3B6FAF6DD59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -71,6 +73,14 @@ Global
 		{61428C70-99A5-4C7E-B768-10DB7B86A8E4}.Release|x64.Build.0 = Release|x64
 		{61428C70-99A5-4C7E-B768-10DB7B86A8E4}.Release|x86.ActiveCfg = Release|Win32
 		{61428C70-99A5-4C7E-B768-10DB7B86A8E4}.Release|x86.Build.0 = Release|Win32
+		{32A8F57B-851B-47F9-A402-C3B6FAF6DD59}.Debug|x64.ActiveCfg = Debug|x64
+		{32A8F57B-851B-47F9-A402-C3B6FAF6DD59}.Debug|x64.Build.0 = Debug|x64
+		{32A8F57B-851B-47F9-A402-C3B6FAF6DD59}.Debug|x86.ActiveCfg = Debug|Win32
+		{32A8F57B-851B-47F9-A402-C3B6FAF6DD59}.Debug|x86.Build.0 = Debug|Win32
+		{32A8F57B-851B-47F9-A402-C3B6FAF6DD59}.Release|x64.ActiveCfg = Release|x64
+		{32A8F57B-851B-47F9-A402-C3B6FAF6DD59}.Release|x64.Build.0 = Release|x64
+		{32A8F57B-851B-47F9-A402-C3B6FAF6DD59}.Release|x86.ActiveCfg = Release|Win32
+		{32A8F57B-851B-47F9-A402-C3B6FAF6DD59}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -10,7 +10,7 @@ mt19937 g_mt(g_rand());     // メルセンヌ・ツイスタの32ビット版
 //mt19937 g_mt(0);     // メルセンヌ・ツイスタの32ビット版
 
 enum {			//	アクション：グー・チョキ・パー
-	SG_DIST = 9,		//	スタートからゴールまでの距離
+	SG_DIST = 2,		//	スタートからゴールまでの距離
 	GOO = 0,
 	CHOKI,
 	PAR,
@@ -79,6 +79,15 @@ void init_win_count(bool b50 = true) {		//	b50: p1 == p2 を 50% に設定
 		}
 	}
 }
+void init_sum_regrets() {
+	for(int p1 = 1; p1 <= SG_DIST; ++p1) {
+		for(int p2 = 1; p2 <= SG_DIST; ++p2) {
+			for(int a = 0; a != N_ACTIONS; ++a) {
+				g_sum_regrets[p1][p2][a] = 0;
+			}
+		}
+	}
+}
 string to_string4(double x) {
 	x = round(x*10) / 10.0;
 	auto txt = to_string(x);
@@ -105,6 +114,20 @@ void print_win_count() {
 	}
 	cout << "↓P2\n\n";
 	//cout << "\n";
+}
+void print_sum_regrets() {
+	for(int p2 = 1; p2 <= SG_DIST; ++p2) {
+		cout << p2 << ": ";
+		for(int p1 = 1; p1 <= SG_DIST; ++p1) {
+			cout << "(";
+			for(int a = 0; a != N_ACTIONS; ++a) {
+				cout << g_sum_regrets[p1][p2][a] << ", ";
+			}
+			cout << "), ";
+		}
+		cout << "\n";
+	}
+	cout << "\n";
 }
 void calc_win_count_random() {		//	各距離ごとのP1勝利回数計算、ランダム vs ランダムプレイヤー
 	auto start = std::chrono::system_clock::now();      // 計測スタート時刻
@@ -142,7 +165,8 @@ void calc_win_count_random() {		//	各距離ごとのP1勝利回数計算、ラ�
     std::cout << "calc_win_count_random(): " << msec << " milli sec \n\n";
     print_win_count();
 }
-void calc_win_count_random_DP() {		//	各距離ごとのP1勝利回数計算、ランダム vs ランダムプレイヤー
+//	各距離ごとのP1勝利回数計算、ランダム vs ランダムプレイヤー
+void calc_win_count_random_DP() {
 	auto start = std::chrono::system_clock::now();      // 計測スタート時刻
 	init_win_count(false);
 	for(int p1 = 1; p1 <= SG_DIST; ++p1) {
@@ -163,6 +187,29 @@ void calc_win_count_random_DP() {		//	各距離ごとのP1勝利回数計算、�
     std::cout << "calc_win_count_random_DP(): " << msec << " milli sec \n\n";
 	print_win_count();
 }
+//	各距離ごとのP1勝利回数計算、CFR最適戦略 vs CFR最適戦略プレイヤー
+void calc_win_count_CFR_DP() {
+	auto start = std::chrono::system_clock::now();      // 計測スタート時刻
+	init_win_count(false);
+	init_sum_regrets();
+	for(int p1 = 1; p1 <= SG_DIST; ++p1) {
+		for(int p2 = 1; p2 <= p1; ++p2) {
+			int wcnt = 0;
+			for(int i = 0; i != N_PLAYOUT; ++i) {
+				if( random_play_out_DP(p1, p2) )
+					++wcnt;
+			}
+			g_win_count[p1-1][p2-1] = wcnt;
+			if( p1 != p2 )
+				g_win_count[p2-1][p1-1] = N_PLAYOUT - wcnt;
+		}
+	}
+	auto end = std::chrono::system_clock::now();       // 計測終了時刻を保存
+    auto dur = end - start;        // 要した時間を計算
+    auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+    std::cout << "calc_win_count_CFR_DP(): " << msec << " milli sec \n\n";
+	print_win_count();
+}
 
 int main()
 {
@@ -171,8 +218,11 @@ int main()
 	//init_win_count();
 	//print_win_count();
 	//
-	calc_win_count_random();
-	calc_win_count_random_DP();
+	//calc_win_count_random();
+	//calc_win_count_random_DP();
+	//
+	init_sum_regrets();
+	print_sum_regrets();
 	//
     std::cout << "\nOK\n";
 }

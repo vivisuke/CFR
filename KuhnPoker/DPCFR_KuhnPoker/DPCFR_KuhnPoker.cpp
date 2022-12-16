@@ -40,10 +40,10 @@ const char *action_string[N_ACTIONS] = {
 
 int			g_n_playout = 0;					//	プレイアウト回数
 string		g_key = "   ";
+// key -> 後悔値ハッシュ
 unordered_map<string, pair<int, int>> g_map;	//	<first, second>: <FOLD, CALL> or <CHECK, RAISE> 順
-//vector<int>	g_cnt_card = {0, 0, 0};
-//vector<uchar> g_hist_actions;					//	実行アクション履歴
 
+//--------------------------------------------------------------------------------
 class Agent {
 public:
 	virtual string get_name() const = 0;
@@ -215,7 +215,6 @@ public:
 	}
 public:
 };
-
 //--------------------------------------------------------------------------------
 class KuhnPoker {
 public:
@@ -362,61 +361,13 @@ private:
 //public:
 	//vector<int>	m_cnt_card;
 };
-//vector<uchar> g_deck;
-
-string sprint(int n, int wd) {
-	string txt = to_string(n);
-	if( txt.size() < wd )
-		txt = string(wd - txt.size(), ' ') + txt;
-	return txt;
-}
-
-//KuhnPoker g_kp;
+//--------------------------------------------------------------------------------
 int main()
 {
 	KuhnPoker kp;
-	//kp.print_deck();
-	//kp.shuffle_deck();
-	//kp.print_deck();
-	int sum = 0;
-	//const int N_PLAYOUT = 1000*1000;
-	//g_cnt_card = { 0, 0, 0 };
-	g_n_playout = 0;
-	cout << "N_PLAYOUT = " << N_PLAYOUT << "\n\n";
-	for (int i = 0; i < N_PLAYOUT; ) {
-		#if DO_PRINT
-			cout << "#" << (i+1) << ": ";
-		#endif
-		++g_n_playout;
-		sum += kp.playout();
-		if( (++i % (N_PLAYOUT/10)) == 0 ) {
-			//cout << "ave(ut) = " << (double)sum / (N_PLAYOUT/10) << "\n";
-			sum = 0;
-		}
-	}
-	//cout << g_cnt_card[0] << ", " << g_cnt_card[1] << ", " << g_cnt_card[2] << "\n";
-	//cout << "\nave(ut) = " << (double)sum / N_PLAYOUT << "\n";
+	kp.print_deck();
+	kp.shuffle_deck();
+	kp.print_deck();
 	//
-	cout << "\ng_map.size() = " << g_map.size() << "\n\n";
-#if	1
-	vector<string> lst;
-	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr)
-		lst.push_back((*itr).first);
-	sort(lst.begin(), lst.end());
-	for (auto itr = lst.begin(); itr != lst.end(); ++itr) {
-		const pair<int, int> &tbl = g_map[*itr];
-		cout << (*itr) << ": " << tbl.first << ", " << tbl.second;
-		if( tbl.first > 0 || tbl.second > 0 ) {
-			auto sum = tbl.first + tbl.second;
-			cout << "\t(" << sprint(tbl.first * 100 / sum, 3) << "%, " << sprint(tbl.second * 100 / sum, 3) << "%)";
-		}
-		cout << "\n";
-	}
-#else
-	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr) {
-		const pair<int, int> &tbl = (*itr).second;
-		cout << (*itr).first << ": " << tbl.first << ", " << tbl.second << "\n";
-	}
-#endif
-    std::cout << "\nOK!\n";
+    std::cout << "\nOK.\n";
 }
