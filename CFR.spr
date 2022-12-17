@@ -72,4 +72,14 @@
 0067 ● C 11/29            │ToDo│calc_win_count_CFR_DP() 実装
 0068 ● C 11/29            │ToDo│print_sum_regrets() 実装
 0069 ◎ C 12/17 12/17 0.001│ToDo│DPCFR_KuhnPoker プロジェクト追加
-0070 ● C 12/17            │ToDo│
+0070 ◎ C 12/17 12/17 0.001│ToDo│key：手札＋行動履歴（Check or Raise）に変更
+0071 ● C 12/17            │ToDo│
+0072 ● C 12/17            │ToDo│
+0073 ● C 12/17            │ToDo│
+0074 ● C 12/17            │ToDo│
+0075 ● C 12/17            │ToDo│
+0076 ● C 12/17            │ToDo│
+0077 ● C 12/17            │ToDo│
+0078 ● C 12/17            │ToDo│
+0079 ● C 12/17            │ToDo│
+0080 ● C 12/17            │ToDo│

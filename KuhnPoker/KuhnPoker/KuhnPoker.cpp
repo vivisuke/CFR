@@ -158,9 +158,20 @@ class CFRAgent : public Agent {
 public:
 	string get_name() const { return "CFRAgent"; }
 	int sel_action(uchar card, int n_actions, bool raised) {
+#if 1
+		g_key = "JQK"[card - RANK_J];
+		switch( n_actions ) {
+		case 1:
+			g_key += raised ? 'R' : 'C';	//	Raised or Checked
+			break;
+		case 2:
+			g_key += "CR";
+		}
+#else
 		g_key[0] = "JQK"[card - RANK_J];
 		g_key[1] = '0' + n_actions;
 		g_key[2] = raised ? 'R' : ' ';
+#endif
 		auto itr = g_map.find(g_key);
 		if( itr == g_map.end() ) {
 			g_map[g_key] = pair<int, int>{ 0, 0 };
@@ -304,9 +315,23 @@ public:
 			}
 		}
 		if( !noML && m_bML[n_actions % 2] ) {		//	学習ありの場合
+	#if 1
+			g_key = "JQK"[card1 - RANK_J];
+			switch( n_actions ) {
+			case 1:
+				g_key += raised ? 'R' : 'C';	//	Raised or Checked
+				break;
+			case 2:
+				g_key += "CR";
+			}
+	#else
 			g_key[0] = "JQK"[card1 - RANK_J];
 			g_key[1] = '0' + n_actions;
 			g_key[2] = raised ? 'R' : ' ';
+	#endif
+			//g_key[0] = "JQK"[card1 - RANK_J];
+			//g_key[1] = '0' + n_actions;
+			//g_key[2] = raised ? 'R' : ' ';
 #if	0
 			if( /*g_key == "Q1R" ||*/ g_key == "Q2R" ) {
 				//cout << g_key << "\n";
@@ -412,6 +437,7 @@ int main()
 		}
 		cout << "\n";
 	}
+	cout << "\n※ C: Checked, R:Raised\n";
 #else
 	for (auto itr = g_map.begin(); itr != g_map.end(); ++itr) {
 		const pair<int, int> &tbl = (*itr).second;
